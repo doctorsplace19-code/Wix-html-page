@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lab Finder – LabCorp & Quest Diagnostics</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f8fa;
+  --surface:#ffffff;
+  --border:#e4e7ed;
+  --border2:#d0d5df;
+  --labcorp:#d63031;
+  --quest:#0984e3;
+  --crl:#6c3fc5;
+  --text:#1a1d23;
+  --muted:#6b7280;
+  --light:#f0f2f6;
+  --accent:#2d3a8c;
+  --shadow:0 2px 12px rgba(0,0,0,.08);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.12);
+  --radius:10px;
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+
+/* ── LAYOUT ── */
+.app{display:flex;flex-direction:column;height:100vh}
+header{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0 20px;height:58px;display:flex;align-items:center;gap:16px;
+  flex-shrink:0;box-shadow:0 1px 0 var(--border);z-index:10;
+}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-icon{
+  width:34px;height:34px;border-radius:9px;
+  background:linear-gradient(135deg,var(--accent),#4f5bd5);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.logo-icon svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.logo-text{font-weight:700;font-size:1.05rem;color:var(--text);letter-spacing:-.02em}
+.logo-text span{color:var(--accent)}
+
+.search-wrap{
+  flex:1;max-width:460px;position:relative;display:flex;align-items:center;gap:8px;
+}
+.search-box{
+  flex:1;height:36px;border:1.5px solid var(--border2);border-radius:8px;
+  padding:0 12px 0 36px;font-size:.88rem;font-family:'DM Sans',sans-serif;
+  background:var(--bg);color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s;
+}
+.search-box:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(45,58,140,.1)}
+.search-box::placeholder{color:var(--muted)}
+.search-icon{position:absolute;left:10px;color:var(--muted);pointer-events:none}
+.search-btn{
+  height:36px;padding:0 16px;border-radius:8px;background:var(--accent);color:#fff;
+  border:none;font-size:.83rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;
+  white-space:nowrap;transition:opacity .15s;
+}
+.search-btn:hover{opacity:.88}
+.search-clear{
+  height:36px;padding:0 12px;border-radius:8px;background:none;border:1.5px solid var(--border2);
+  color:var(--muted);font-size:.83rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;
+  display:none;
+}
+.search-clear.visible{display:block}
+.search-clear:hover{color:var(--text);border-color:var(--border2)}
+
+.header-right{display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0}
+.filter-btn{
+  height:34px;padding:0 14px;border-radius:20px;border:1.5px solid var(--border2);
+  background:transparent;color:var(--muted);font-size:.8rem;font-weight:500;
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap;
+  display:flex;align-items:center;gap:6px;
+}
+.filter-btn .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.filter-btn.active-all{background:rgba(45,58,140,.08);border-color:var(--accent);color:var(--accent)}
+.filter-btn.active-lc{background:rgba(214,48,49,.08);border-color:var(--labcorp);color:var(--labcorp)}
+.filter-btn.active-qd{background:rgba(9,132,227,.08);border-color:var(--quest);color:var(--quest)}
+.filter-btn.active-crl{background:rgba(108,63,197,.08);border-color:var(--crl);color:var(--crl)}
+
+.body{display:flex;flex:1;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:360px;flex-shrink:0;display:flex;flex-direction:column;
+  background:var(--surface);border-right:1px solid var(--border);overflow:hidden;
+}
+.sidebar-head{
+  padding:14px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.sidebar-title{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:2px}
+.sidebar-count{font-size:1.1rem;font-weight:700;color:var(--text)}
+.sidebar-count span{color:var(--muted);font-weight:400;font-size:.85rem}
+.radius-row{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
+.radius-label{font-size:.72rem;color:var(--muted)}
+.radius-chip{
+  height:26px;padding:0 10px;border-radius:13px;border:1.5px solid var(--border2);
+  background:transparent;color:var(--muted);font-size:.75rem;font-weight:500;
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;
+}
+.radius-chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.list{flex:1;overflow-y:auto;padding:8px}
+.list::-webkit-scrollbar{width:4px}
+.list::-webkit-scrollbar-track{background:transparent}
+.list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+.card{
+  border-radius:var(--radius);border:1.5px solid var(--border);padding:12px 14px;
+  margin-bottom:6px;cursor:pointer;transition:all .18s;background:var(--surface);
+  display:flex;gap:12px;align-items:flex-start;
+}
+.card:hover{border-color:var(--border2);box-shadow:var(--shadow);transform:translateY(-1px)}
+.card.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(45,58,140,.1)}
+.card-badge{
+  width:36px;height:36px;border-radius:8px;flex-shrink:0;display:flex;
+  align-items:center;justify-content:center;font-size:.65rem;font-weight:700;
+  font-family:'DM Mono',monospace;letter-spacing:.02em;
+}
+.card-badge.labcorp{background:rgba(214,48,49,.1);color:var(--labcorp)}
+.card-badge.quest{background:rgba(9,132,227,.1);color:var(--quest)}
+.card-badge.crl{background:rgba(108,63,197,.1);color:var(--crl)}
+.card-info{flex:1;min-width:0}
+.card-name{font-size:.88rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.card-addr{font-size:.76rem;color:var(--muted);line-height:1.4;margin-bottom:5px}
+.card-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.card-tag{
+  font-size:.68rem;font-weight:500;padding:2px 7px;border-radius:10px;
+  background:var(--light);color:var(--muted);
+}
+.card-dist{font-size:.72rem;font-weight:600;color:var(--accent)}
+.card-rating{font-size:.72rem;color:#f59e0b;font-weight:600}
+
+.no-results{padding:40px 20px;text-align:center;color:var(--muted)}
+.no-results svg{width:40px;height:40px;margin:0 auto 12px;display:block;opacity:.3}
+.no-results strong{display:block;color:var(--text);font-size:.95rem;margin-bottom:6px}
+
+/* ── MAP ── */
+.map-wrap{flex:1;position:relative}
+#map{width:100%;height:100%}
+
+/* ── INFO WINDOW override ── */
+.gm-style .gm-style-iw-c{border-radius:12px!important;padding:0!important;box-shadow:var(--shadow-lg)!important;max-width:300px!important}
+.gm-style .gm-style-iw-d{overflow:hidden!important;padding:0!important}
+.gm-style .gm-style-iw-tc::after{background:#fff!important}
+.iw{padding:16px;font-family:'DM Sans',sans-serif;min-width:240px}
+.iw-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.iw-badge{
+  width:32px;height:32px;border-radius:7px;flex-shrink:0;display:flex;
+  align-items:center;justify-content:center;font-size:.6rem;font-weight:700;font-family:'DM Mono',monospace;
+}
+.iw-badge.labcorp{background:rgba(214,48,49,.1);color:var(--labcorp)}
+.iw-badge.quest{background:rgba(9,132,227,.1);color:var(--quest)}
+.iw-badge.crl{background:rgba(108,63,197,.1);color:var(--crl)}
+.iw-name{font-size:.9rem;font-weight:700;color:var(--text);line-height:1.3}
+.iw-type{font-size:.7rem;color:var(--muted);font-weight:500;margin-top:1px}
+.iw-rows{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.iw-row{display:flex;gap:8px;align-items:flex-start;font-size:.78rem}
+.iw-row-icon{flex-shrink:0;margin-top:1px;opacity:.5}
+.iw-row-val{color:var(--text);line-height:1.4}
+.iw-row-val a{color:var(--accent);text-decoration:none;font-weight:500}
+.iw-row-val a:hover{text-decoration:underline}
+.iw-actions{display:flex;gap:6px}
+.iw-btn{
+  flex:1;height:32px;border-radius:7px;border:none;font-size:.75rem;font-weight:600;
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .15s;text-decoration:none;
+  display:flex;align-items:center;justify-content:center;
+}
+.iw-btn-primary{background:var(--accent);color:#fff}
+.iw-btn-secondary{background:var(--light);color:var(--text)}
+.iw-btn:hover{opacity:.85}
+
+/* ── MAP CONTROLS ── */
+.map-legend{
+  position:absolute;bottom:28px;left:16px;background:var(--surface);
+  border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;
+  box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px;
+}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:.75rem;font-weight:500;color:var(--text)}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.legend-dot.lc{background:var(--labcorp)}
+.legend-dot.qd{background:var(--quest)}
+.legend-dot.crl{background:var(--crl)}
+
+.searching-overlay{
+  position:absolute;inset:0;background:rgba(247,248,250,.6);backdrop-filter:blur(2px);
+  display:none;align-items:center;justify-content:center;z-index:5;
+}
+.searching-overlay.visible{display:flex}
+.searching-spinner{
+  background:var(--surface);border-radius:12px;padding:20px 28px;box-shadow:var(--shadow-lg);
+  display:flex;align-items:center;gap:12px;font-weight:500;font-size:.9rem;color:var(--text);
+}
+.spinner{width:20px;height:20px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.toast{
+  position:absolute;top:16px;left:50%;transform:translateX(-50%);
+  background:var(--text);color:#fff;padding:8px 18px;border-radius:20px;
+  font-size:.8rem;font-weight:500;opacity:0;transition:opacity .3s;pointer-events:none;
+  white-space:nowrap;z-index:20;
+}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+      </div>
+      <span class="logo-text">Lab<span>Finder</span></span>
+    </div>
+
+    <div class="search-wrap">
+      <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-box" id="search-input" type="text" placeholder="Loading map…" autocomplete="off" disabled/>
+      <button class="search-btn" onclick="doSearch()">Search</button>
+      <button class="search-clear" id="search-clear" onclick="clearSearch()">✕ Clear</button>
+    </div>
+
+    <div class="header-right">
+      <button class="filter-btn active-all" id="btn-all" onclick="setFilter('all')">
+        <span class="dot" style="background:var(--accent)"></span> All Labs
+      </button>
+      <button class="filter-btn" id="btn-lc" onclick="setFilter('labcorp')">
+        <span class="dot" style="background:var(--labcorp)"></span> LabCorp
+      </button>
+      <button class="filter-btn" id="btn-qd" onclick="setFilter('quest')">
+        <span class="dot" style="background:var(--quest)"></span> Quest
+      </button>
+      <button class="filter-btn" id="btn-crl" onclick="setFilter('crl')">
+        <span class="dot" style="background:var(--crl)"></span> CRL Network
+      </button>
+    </div>
+  </header>
+
+  <div class="body">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-head">
+        <div class="sidebar-title">Locations</div>
+        <div class="sidebar-count" id="loc-count">0 <span>found</span></div>
+        <div class="radius-row" id="radius-row" style="display:none">
+          <span class="radius-label">Radius:</span>
+          <button class="radius-chip" data-r="5" onclick="setRadius(5)">5 mi</button>
+          <button class="radius-chip active" data-r="10" onclick="setRadius(10)">10 mi</button>
+          <button class="radius-chip" data-r="25" onclick="setRadius(25)">25 mi</button>
+          <button class="radius-chip" data-r="50" onclick="setRadius(50)">50 mi</button>
+        </div>
+      </div>
+      <div class="list" id="loc-list">
+        <div class="no-results">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <strong>Search to find labs</strong>
+          Enter a city, state, or ZIP code to find LabCorp and Quest locations near you.
+        </div>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div class="map-wrap">
+      <div id="map">
+        <div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:10px;color:#6b7280;font-family:'DM Sans',sans-serif">
+          <div style="width:28px;height:28px;border:3px solid #e4e7ed;border-top-color:#2d3a8c;border-radius:50%;animation:spin .7s linear infinite"></div>
+          <span style="font-size:.85rem">Loading map…</span>
+        </div>
+      </div>
+      <div class="searching-overlay" id="searching">
+        <div class="searching-spinner">
+          <div class="spinner"></div>
+          Searching for labs…
+        </div>
+      </div>
+      <div class="map-legend">
+        <div class="legend-item"><span class="legend-dot lc"></span> LabCorp</div>
+        <div class="legend-item"><span class="legend-dot qd"></span> Quest Diagnostics</div>
+        <div class="legend-item"><span class="legend-dot crl"></span> CRL Network</div>
+      </div>
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_KEY = 'AIzaSyDy9OQD7l1CQW0f0zUoG9THYSK-7MDv-FI';
+let map, placesService, geocoder, infoWindow;
+let allMarkers = [];
+let allResults = [];
+let currentFilter = 'all';
+let searchRadius = 10;
+let searchCenter = null;
+let radiusCircle = null;
+let crlMarkersShown = [];
+let mapReady = false;
+
+// ── CRL Static Locations ──
+const CRL_LOCS = [
+  // NJ
+  {name:"Doctors Place Walk-In",addr:'75 Summit Ave Ste 200, Hackensack, NJ 07601',state:'NJ',lat:40.8859,lng:-74.0435,phone:'N/A',hours:'Walk-in available',tag:'Walk-In'},
+  {name:'Concentra Teterboro',addr:'150 North St, Teterboro, NJ 07608',state:'NJ',lat:40.8571,lng:-74.0607,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Clifton',addr:'283 Piaget Ave, Clifton, NJ 07011',state:'NJ',lat:40.8668,lng:-74.1571,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra West New York',addr:'6701 Bergenline Ave, West New York, NJ 07093',state:'NJ',lat:40.7876,lng:-74.0154,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Secaucus',addr:'30 Seaview Dr, Secaucus, NJ 07094',state:'NJ',lat:40.7797,lng:-74.0712,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Haledon',addr:'1 W Haledon Ave, Haledon, NJ 07508',state:'NJ',lat:40.9520,lng:-74.1882,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  {name:'AFC Urgent Care – Bloomfield',addr:'220 Bloomfield Ave, Bloomfield, NJ 07003',state:'NJ',lat:40.8057,lng:-74.1874,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  {name:'Concentra Jersey City',addr:'574 Summit Ave #4, Jersey City, NJ 07306',state:'NJ',lat:40.7242,lng:-74.0776,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Handz On Lab Solutions',addr:'185 Central Ave Ste 615, East Orange, NJ 07018',state:'NJ',lat:40.7668,lng:-74.2141,phone:'N/A',hours:'Call for hours',tag:'Lab'},
+  {name:'Concentra Newark',addr:'375 McCarter Hwy, Newark, NJ 07114',state:'NJ',lat:40.7282,lng:-74.1726,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Elizabeth',addr:'615 Division St, Elizabeth, NJ 07201',state:'NJ',lat:40.6626,lng:-74.2104,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care US 1-9',addr:'117 Spring St, Elizabeth, NJ 07201',state:'NJ',lat:40.6643,lng:-74.2073,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // NY
+  {name:'Medrite Urgent Care – Midtown West',addr:'521 W 42nd St, New York, NY 10036',state:'NY',lat:40.7580,lng:-73.9979,phone:'N/A',hours:'Walk-in available',tag:'Medrite'},
+  {name:'Medrite Urgent Care – Midtown East',addr:'919 2nd Ave, New York, NY 10017',state:'NY',lat:40.7510,lng:-73.9706,phone:'N/A',hours:'Walk-in available',tag:'Medrite'},
+  {name:'Medrite Urgent Care – Lenox Hill',addr:'1090 3rd Ave, New York, NY 10065',state:'NY',lat:40.7661,lng:-73.9632,phone:'N/A',hours:'Walk-in available',tag:'Medrite'},
+  {name:'Medrite Urgent Care – Yorkville',addr:'1646 2nd Ave, New York, NY 10028',state:'NY',lat:40.7771,lng:-73.9531,phone:'N/A',hours:'Walk-in available',tag:'Medrite'},
+  {name:'Medrite Urgent Care – Astoria',addr:'2715 30th Ave, Long Island City, NY 11102',state:'NY',lat:40.7700,lng:-73.9198,phone:'N/A',hours:'Walk-in available',tag:'Medrite'},
+  {name:'Medrite Urgent Care – Tribeca',addr:'139 Chambers St, New York, NY 10007',state:'NY',lat:40.7148,lng:-74.0082,phone:'N/A',hours:'Walk-in available',tag:'Medrite'},
+  {name:'Statcare – Astoria',addr:'3715 23rd Ave, Astoria, NY 11105',state:'NY',lat:40.7748,lng:-73.9026,phone:'N/A',hours:'Walk-in available',tag:'Statcare'},
+  {name:'Medrite Urgent Care – Manhattanville',addr:'473 W 125th St, New York, NY 10027',state:'NY',lat:40.8083,lng:-73.9541,phone:'N/A',hours:'Walk-in available',tag:'Medrite'},
+  {name:'ModernMD – Williamsburg',addr:'68 Graham Ave, Brooklyn, NY 11206',state:'NY',lat:40.7082,lng:-73.9425,phone:'N/A',hours:'Walk-in available',tag:'ModernMD'},
+  {name:'Medrite Urgent Care – Clinton Hill',addr:'504 Myrtle Ave, Brooklyn, NY 11205',state:'NY',lat:40.6957,lng:-73.9687,phone:'N/A',hours:'Walk-in available',tag:'Medrite'},
+  {name:'Statcare – Jackson Heights',addr:'8010 Northern Blvd, Jackson Heights, NY 11372',state:'NY',lat:40.7532,lng:-73.8840,phone:'N/A',hours:'Walk-in available',tag:'Statcare'},
+  {name:'ModernMD – Jackson Heights',addr:'3733 82nd St, Jackson Heights, NY 11372',state:'NY',lat:40.7473,lng:-73.8814,phone:'N/A',hours:'Walk-in available',tag:'ModernMD'},
+  {name:'ModernMD – Freshpond',addr:'6721 Fresh Pond Rd, Ridgewood, NY 11385',state:'NY',lat:40.7024,lng:-73.9040,phone:'N/A',hours:'Walk-in available',tag:'ModernMD'},
+  {name:'Statcare – Brooklyn',addr:'341 Eastern Pkwy, Brooklyn, NY 11216',state:'NY',lat:40.6708,lng:-73.9511,phone:'N/A',hours:'Walk-in available',tag:'Statcare'},
+  {name:'ModernMD – Liberty',addr:'1169 Liberty Ave, Brooklyn, NY 11208',state:'NY',lat:40.6757,lng:-73.8690,phone:'N/A',hours:'Walk-in available',tag:'ModernMD'},
+  {name:'ModernMD – Lefferts',addr:'10342 Lefferts Blvd, South Richmond Hill, NY 11419',state:'NY',lat:40.6960,lng:-73.8186,phone:'N/A',hours:'Walk-in available',tag:'ModernMD'},
+  {name:'Statcare – Jamaica',addr:'9018 Sutphin Blvd, Jamaica, NY 11435',state:'NY',lat:40.6990,lng:-73.8063,phone:'N/A',hours:'Walk-in available',tag:'Statcare'},
+  {name:'Medrite Urgent Care – Jamaica Queens',addr:'16015 Jamaica Ave, Jamaica, NY 11432',state:'NY',lat:40.7021,lng:-73.7920,phone:'N/A',hours:'Walk-in available',tag:'Medrite'},
+  // PA
+  {name:'The WorkCenter at Williamsport',addr:'1100 Grampian Blvd, Williamsport, PA 17701',state:'PA',lat:41.2430,lng:-77.0141,phone:'N/A',hours:'Call for hours',tag:'WorkCenter'},
+  // FL
+  {name:'Concentra Miami Airport',addr:'6221 NW 36th St, Virginia Gardens, FL 33166',state:'FL',lat:25.8133,lng:-80.3044,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Gables Chiropractic',addr:'8000 W Flagler St Ste 203, Miami, FL 33144',state:'FL',lat:25.7726,lng:-80.3299,phone:'N/A',hours:'Call for hours',tag:'Clinic'},
+  {name:'Health Care Center – Little Havana',addr:'711 NW 21st Court, Miami, FL 33125',state:'FL',lat:25.7776,lng:-80.2288,phone:'N/A',hours:'Call for hours',tag:'Clinic'},
+  {name:'Concentra Doral',addr:'7800 NW 25th St Ste 4, Doral, FL 33122',state:'FL',lat:25.8117,lng:-80.3446,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Fastest Labs – Downtown Miami',addr:'1401 NW 17th Ave, Miami, FL 33125',state:'FL',lat:25.7871,lng:-80.2256,phone:'N/A',hours:'Call for hours',tag:'Fastest Labs'},
+  {name:'Concentra Hialeah',addr:'855 E 8th Ave, Hialeah, FL 33010',state:'FL',lat:25.8601,lng:-80.2682,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'OccMed Miami',addr:'6801 NW 77th Ave Ste 105, Miami, FL 33166',state:'FL',lat:25.8222,lng:-80.3153,phone:'N/A',hours:'Call for hours',tag:'OccMed'},
+  {name:'DOT Solution Inc',addr:'2555 NW 102nd Ave Ste 110, Doral, FL 33172',state:'FL',lat:25.7977,lng:-80.3784,phone:'N/A',hours:'Call for hours',tag:'DOT'},
+  {name:'Health Care Center – Medley',addr:'7911 NW 72nd Ave Ste 111, Medley, FL 33166',state:'FL',lat:25.8203,lng:-80.3221,phone:'N/A',hours:'Call for hours',tag:'Clinic'},
+  {name:'Concentra Pinecrest',addr:'10205 S Dixie Hwy Ste 102, Pinecrest, FL 33156',state:'FL',lat:25.6677,lng:-80.3318,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Medrite Urgent Care – Miami Beach',addr:'542 Arthur Godfrey Rd, Miami Beach, FL 33140',state:'FL',lat:25.8112,lng:-80.1346,phone:'N/A',hours:'Walk-in available',tag:'Medrite'},
+  {name:'Concentra Hialeah Gardens',addr:'13750 NW 107th Ave Ste 104, Hialeah Gardens, FL 33018',state:'FL',lat:25.9126,lng:-80.3379,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Isacare Laboratory',addr:'16800 NW 2nd Ave Ste 203, North Miami Beach, FL 33169',state:'FL',lat:25.9308,lng:-80.2021,phone:'N/A',hours:'Call for hours',tag:'Lab'},
+  {name:'Concentra Golden Glades',addr:'17601 NW 2nd Ave Ste S, Miami, FL 33169',state:'FL',lat:25.9416,lng:-80.2016,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Miami Gardens',addr:'20535 NW 2nd Ave Ste 150, Miami, FL 33169',state:'FL',lat:25.9764,lng:-80.2012,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Allied Health – Quincy',addr:'1102 W Jefferson St, Quincy, FL 32351',state:'FL',lat:30.5872,lng:-84.6015,phone:'N/A',hours:'Call for hours',tag:'Allied Health'},
+  {name:'MainStreet Family Care – Quincy',addr:'1730 Pat Thomas Pkwy, Quincy, FL 32351',state:'FL',lat:30.5686,lng:-84.5729,phone:'N/A',hours:'Call for hours',tag:'MainStreet'},
+  {name:'Emerald Coast Walk In',addr:'3890 Jenks Ave, Lynn Haven, FL 32444',state:'FL',lat:30.2468,lng:-85.6364,phone:'N/A',hours:'Walk-in available',tag:'Urgent Care'},
+  // AL
+  {name:'MainStreet Family Care – Dothan',addr:'3071 S Oates St, Dothan, AL 36301',state:'AL',lat:31.2100,lng:-85.3964,phone:'N/A',hours:'Call for hours',tag:'MainStreet'},
+  {name:'AllSouth Urgent Care – Ross Clark',addr:'1052 Ross Clark Cir, Dothan, AL 36303',state:'AL',lat:31.2344,lng:-85.4200,phone:'N/A',hours:'Walk-in available',tag:'Urgent Care'},
+  {name:'OnPoint Diagnostic',addr:'2276 Montgomery Hwy Ste 4, Dothan, AL 36303',state:'AL',lat:31.2311,lng:-85.4508,phone:'N/A',hours:'Call for hours',tag:'Lab'},
+  {name:'AllSouth Urgent Care – Montgomery Hwy',addr:'4585 Montgomery Hwy, Dothan, AL 36303',state:'AL',lat:31.2637,lng:-85.4508,phone:'N/A',hours:'Walk-in available',tag:'Urgent Care'},
+  // GA
+  {name:'MainStreet Family Care – Bainbridge',addr:'1408 Tallahassee Hwy Ste Z, Bainbridge, GA 39819',state:'GA',lat:30.8979,lng:-84.5756,phone:'N/A',hours:'Call for hours',tag:'MainStreet'},
+  {name:'Concentra Atlanta Midtown',addr:'1100 Spring St NW Ste 550, Atlanta, GA 30309',state:'GA',lat:33.7938,lng:-84.3877,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Atlanta Northside',addr:'5788 Roswell Rd NE Ste 100, Atlanta, GA 30328',state:'GA',lat:33.9054,lng:-84.3746,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Sandy Springs',addr:'6650 Roswell Rd, Sandy Springs, GA 30328',state:'GA',lat:33.9290,lng:-84.3748,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  {name:'Concentra Savannah',addr:'5500 Abercorn St Ste 23, Savannah, GA 31405',state:'GA',lat:32.0280,lng:-81.1100,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  // TX
+  {name:'Concentra Houston Westheimer',addr:'2600 S Gessner Rd, Houston, TX 77063',state:'TX',lat:29.7354,lng:-95.5446,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Dallas Stemmons',addr:'8585 Stemmons Fwy Ste 100, Dallas, TX 75247',state:'TX',lat:32.8098,lng:-96.8704,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra San Antonio',addr:'4230 Gardendale St, San Antonio, TX 78229',state:'TX',lat:29.4894,lng:-98.5713,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Austin',addr:'4301 W William Cannon Dr Ste 200, Austin, TX 78749',state:'TX',lat:30.2143,lng:-97.8328,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Fort Worth',addr:'4750 Bryant Irvin Rd, Fort Worth, TX 76132',state:'TX',lat:32.6706,lng:-97.4117,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  {name:'Fastest Labs – Houston',addr:'2500 Tanglewilde St Ste 420, Houston, TX 77063',state:'TX',lat:29.7314,lng:-95.5404,phone:'N/A',hours:'Call for hours',tag:'Fastest Labs'},
+  {name:'ARCpoint Labs – Dallas',addr:'4514 Cole Ave Ste 600, Dallas, TX 75205',state:'TX',lat:32.8209,lng:-96.7945,phone:'N/A',hours:'Call for hours',tag:'ARCpoint'},
+  // IL
+  {name:'Concentra Chicago Loop',addr:'200 N LaSalle St Ste 1700, Chicago, IL 60601',state:'IL',lat:41.8858,lng:-87.6318,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Chicago North',addr:'3645 N Broadway St, Chicago, IL 60613',state:'IL',lat:41.9490,lng:-87.6447,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Evanston',addr:'1525 Lake Ave, Evanston, IL 60201',state:'IL',lat:42.0545,lng:-87.6830,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  {name:'Fastest Labs – Chicago',addr:'2720 N Halsted St, Chicago, IL 60614',state:'IL',lat:41.9296,lng:-87.6487,phone:'N/A',hours:'Call for hours',tag:'Fastest Labs'},
+  // OH
+  {name:'Concentra Columbus',addr:'1100 Dublin Rd, Columbus, OH 43215',state:'OH',lat:39.9757,lng:-83.0551,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Cleveland',addr:'3681 Green Rd, Beachwood, OH 44122',state:'OH',lat:41.4739,lng:-81.4988,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Cincinnati',addr:'7485 Kenwood Rd, Cincinnati, OH 45236',state:'OH',lat:39.2136,lng:-84.3897,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  {name:'ARCpoint Labs – Columbus',addr:'1444 S Fifth St, Columbus, OH 43207',state:'OH',lat:39.9423,lng:-82.9987,phone:'N/A',hours:'Call for hours',tag:'ARCpoint'},
+  // PA (extra)
+  {name:'Concentra Philadelphia',addr:'2501 Grant Ave, Philadelphia, PA 19114',state:'PA',lat:40.0679,lng:-75.0108,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Pittsburgh',addr:'450 Seventh Ave Ste 120, Pittsburgh, PA 15219',state:'PA',lat:40.4398,lng:-79.9986,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Allentown',addr:'1251 S Cedar Crest Blvd, Allentown, PA 18103',state:'PA',lat:40.5781,lng:-75.4871,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // MA
+  {name:'Concentra Boston',addr:'99 Chauncy St Ste 200, Boston, MA 02111',state:'MA',lat:42.3547,lng:-71.0602,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Waltham',addr:'200 Fifth Ave Ste 200, Waltham, MA 02451',state:'MA',lat:42.3837,lng:-71.2548,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Quincy',addr:'859 Southern Artery, Quincy, MA 02169',state:'MA',lat:42.2529,lng:-71.0017,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  {name:'ARCpoint Labs – Boston',addr:'745 Atlantic Ave, Boston, MA 02111',state:'MA',lat:42.3540,lng:-71.0553,phone:'N/A',hours:'Call for hours',tag:'ARCpoint'},
+  // AZ
+  {name:'Concentra Phoenix',addr:'5010 E McDowell Rd Ste 105, Phoenix, AZ 85008',state:'AZ',lat:33.4718,lng:-111.9790,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Scottsdale',addr:'9375 E Shea Blvd Ste 100, Scottsdale, AZ 85260',state:'AZ',lat:33.5869,lng:-111.8896,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Tucson',addr:'5521 E Speedway Blvd, Tucson, AZ 85712',state:'AZ',lat:32.2306,lng:-110.8682,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  {name:'Fastest Labs – Phoenix',addr:'2920 E Camelback Rd Ste 120, Phoenix, AZ 85016',state:'AZ',lat:33.5083,lng:-112.0247,phone:'N/A',hours:'Call for hours',tag:'Fastest Labs'},
+  // WA
+  {name:'Concentra Seattle',addr:'1200 6th Ave Ste 200, Seattle, WA 98101',state:'WA',lat:47.6088,lng:-122.3321,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Bellevue',addr:'1550 140th Ave NE Ste 100, Bellevue, WA 98005',state:'WA',lat:47.5979,lng:-122.1666,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Spokane',addr:'707 N Mullan Rd, Spokane Valley, WA 99206',state:'WA',lat:47.6670,lng:-117.2073,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // CO
+  {name:'Concentra Denver',addr:'1391 Speer Blvd Ste 100, Denver, CO 80204',state:'CO',lat:39.7286,lng:-104.9892,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Aurora',addr:'14111 E Alameda Ave Ste 300, Aurora, CO 80012',state:'CO',lat:39.7159,lng:-104.8106,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Colorado Springs',addr:'1619 Medical Center Point, Colorado Springs, CO 80907',state:'CO',lat:38.9005,lng:-104.8185,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  {name:'Fastest Labs – Denver',addr:'1499 Blake St Ste 1E, Denver, CO 80202',state:'CO',lat:39.7512,lng:-104.9971,phone:'N/A',hours:'Call for hours',tag:'Fastest Labs'},
+  // MI
+  {name:'Concentra Detroit',addr:'2401 W Grand Blvd Ste 150, Detroit, MI 48208',state:'MI',lat:42.3626,lng:-83.0932,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Grand Rapids',addr:'4900 Cascade Rd SE Ste 100, Grand Rapids, MI 49546',state:'MI',lat:42.9132,lng:-85.5800,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Ann Arbor',addr:'3885 Washtenaw Ave, Ann Arbor, MI 48104',state:'MI',lat:42.2503,lng:-83.6905,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // MN
+  {name:'Concentra Minneapolis',addr:'7400 Metro Blvd Ste 100, Edina, MN 55435',state:'MN',lat:44.8747,lng:-93.3539,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra St. Paul',addr:'2855 Anthony Ln S Ste 100, St. Anthony, MN 55418',state:'MN',lat:45.0256,lng:-93.2126,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Bloomington',addr:'9801 Lyndale Ave S, Bloomington, MN 55420',state:'MN',lat:44.8291,lng:-93.3188,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // GA (extra)
+  {name:'Fastest Labs – Atlanta',addr:'1355 Peachtree St NE Ste 1600, Atlanta, GA 30309',state:'GA',lat:33.7850,lng:-84.3837,phone:'N/A',hours:'Call for hours',tag:'Fastest Labs'},
+  // NC
+  {name:'Concentra Charlotte',addr:'3901 Computer Dr Ste 100, Raleigh, NC 27609',state:'NC',lat:35.8394,lng:-78.6673,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Raleigh',addr:'4505 Falls of Neuse Rd Ste 650, Raleigh, NC 27609',state:'NC',lat:35.8522,lng:-78.6310,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Charlotte',addr:'7607 Pineville-Matthews Rd, Charlotte, NC 28226',state:'NC',lat:35.0543,lng:-80.8556,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  {name:'Fastest Labs – Charlotte',addr:'9101 Pineville-Matthews Rd Ste B, Pineville, NC 28134',state:'NC',lat:35.0825,lng:-80.8808,phone:'N/A',hours:'Call for hours',tag:'Fastest Labs'},
+  // VA
+  {name:'Concentra Arlington',addr:'4031 University Dr Ste 100, Fairfax, VA 22030',state:'VA',lat:38.8554,lng:-77.3019,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Richmond',addr:'4915 W Broad St, Richmond, VA 23230',state:'VA',lat:37.5797,lng:-77.5108,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Virginia Beach',addr:'1657 General Booth Blvd, Virginia Beach, VA 23454',state:'VA',lat:36.7847,lng:-76.0349,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // MD
+  {name:'Concentra Baltimore',addr:'2901 Druid Park Dr, Baltimore, MD 21215',state:'MD',lat:39.3349,lng:-76.6724,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Rockville',addr:'15505 Shady Grove Rd Ste 100, Rockville, MD 20850',state:'MD',lat:39.1007,lng:-77.2006,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Annapolis',addr:'2661 Riva Rd, Annapolis, MD 21401',state:'MD',lat:38.9878,lng:-76.5643,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // DC
+  {name:'Concentra Washington DC',addr:'1250 H St NW Ste 200, Washington, DC 20005',state:'DC',lat:38.8998,lng:-77.0309,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – DC',addr:'2715 Pennsylvania Ave SE, Washington, DC 20020',state:'DC',lat:38.8660,lng:-76.9815,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // TN
+  {name:'Concentra Nashville',addr:'1801 Charlotte Ave Ste 100, Nashville, TN 37203',state:'TN',lat:36.1548,lng:-86.8153,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Memphis',addr:'3490 Lamar Ave, Memphis, TN 38118',state:'TN',lat:35.0693,lng:-89.9177,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Knoxville',addr:'8514 Kingston Pike, Knoxville, TN 37919',state:'TN',lat:35.9333,lng:-84.0559,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // MO
+  {name:'Concentra St. Louis',addr:'1401 S Brentwood Blvd Ste 100, St. Louis, MO 63144',state:'MO',lat:38.6197,lng:-90.3756,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Kansas City',addr:'4400 Shawnee Mission Pkwy Ste 108, Fairway, KS 66205',state:'MO',lat:39.0249,lng:-94.6351,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Springfield',addr:'1330 E Kingsley St, Springfield, MO 65804',state:'MO',lat:37.1860,lng:-93.2646,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // SC
+  {name:'Concentra Columbia',addr:'1320 Pulaski St, Columbia, SC 29201',state:'SC',lat:34.0007,lng:-81.0348,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Charleston',addr:'1483 Folly Rd, Charleston, SC 29412',state:'SC',lat:32.7404,lng:-79.9586,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  {name:'Fastest Labs – Greenville',addr:'1025 Woodruff Rd Ste E, Greenville, SC 29607',state:'SC',lat:34.8152,lng:-82.3593,phone:'N/A',hours:'Call for hours',tag:'Fastest Labs'},
+  // IN
+  {name:'Concentra Indianapolis',addr:'8720 Castle Creek Pkwy E Dr, Indianapolis, IN 46250',state:'IN',lat:39.8962,lng:-86.0389,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Fort Wayne',addr:'4011 W Jefferson Blvd, Fort Wayne, IN 46804',state:'IN',lat:41.0579,lng:-85.1980,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // WI
+  {name:'Concentra Milwaukee',addr:'2600 N Mayfair Rd Ste 1040, Wauwatosa, WI 53226',state:'WI',lat:43.0588,lng:-88.0322,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Madison',addr:'810 E Johnson St, Madison, WI 53703',state:'WI',lat:43.0819,lng:-89.3653,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // KY
+  {name:'Concentra Louisville',addr:'500 W Jefferson St Ste 1400, Louisville, KY 40202',state:'KY',lat:38.2541,lng:-85.7592,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Lexington',addr:'3061 Fieldstone Way, Lexington, KY 40513',state:'KY',lat:38.0181,lng:-84.5546,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // LA
+  {name:'Concentra New Orleans',addr:'1555 Poydras St Ste 700, New Orleans, LA 70112',state:'LA',lat:29.9527,lng:-90.0773,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Baton Rouge',addr:'8115 Airline Hwy, Baton Rouge, LA 70815',state:'LA',lat:30.4801,lng:-91.1302,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // OK
+  {name:'Concentra Oklahoma City',addr:'5300 N Western Ave Ste 100, Oklahoma City, OK 73118',state:'OK',lat:35.5040,lng:-97.5688,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Tulsa',addr:'6128 S Sheridan Rd, Tulsa, OK 74145',state:'OK',lat:36.0729,lng:-95.9060,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // KS
+  {name:'Concentra Wichita',addr:'1919 N Amidon Ave Ste 119, Wichita, KS 67203',state:'KS',lat:37.7007,lng:-97.3810,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Overland Park',addr:'7015 College Blvd Ste 100, Overland Park, KS 66211',state:'KS',lat:38.9101,lng:-94.6769,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // NV
+  {name:'Concentra Las Vegas',addr:'3150 N Tenaya Way Ste 105, Las Vegas, NV 89128',state:'NV',lat:36.2125,lng:-115.2520,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Reno',addr:'6630 S McCarran Blvd, Reno, NV 89509',state:'NV',lat:39.4882,lng:-119.8038,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Henderson',addr:'591 College Dr, Henderson, NV 89015',state:'NV',lat:36.0444,lng:-115.0002,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // OR
+  {name:'Concentra Portland',addr:'3 Centerpointe Dr Ste 140, Lake Oswego, OR 97035',state:'OR',lat:45.4204,lng:-122.7112,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Beaverton',addr:'4800 SW Griffith Dr Ste 100, Beaverton, OR 97005',state:'OR',lat:45.4838,lng:-122.8103,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // UT
+  {name:'Concentra Salt Lake City',addr:'5445 S 900 E Ste 100, Murray, UT 84117',state:'UT',lat:40.6495,lng:-111.8831,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Provo',addr:'1765 N Freedom Blvd, Provo, UT 84604',state:'UT',lat:40.2509,lng:-111.6596,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // CT
+  {name:'Concentra Hartford',addr:'18 asylum St, Hartford, CT 06103',state:'CT',lat:41.7651,lng:-72.6849,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Stamford',addr:'1177 High Ridge Rd, Stamford, CT 06905',state:'CT',lat:41.1215,lng:-73.5365,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  {name:'Fastest Labs – New Haven',addr:'129 Church St Ste 802, New Haven, CT 06510',state:'CT',lat:41.3085,lng:-72.9268,phone:'N/A',hours:'Call for hours',tag:'Fastest Labs'},
+  // RI
+  {name:'Concentra Providence',addr:'100 Dorrance St Ste 700, Providence, RI 02903',state:'RI',lat:41.8231,lng:-71.4128,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Warwick',addr:'1000 Bald Hill Rd, Warwick, RI 02886',state:'RI',lat:41.7234,lng:-71.4890,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // NH
+  {name:'Concentra Manchester',addr:'1000 Elm St Ste 1002, Manchester, NH 03101',state:'NH',lat:42.9956,lng:-71.4548,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Nashua',addr:'310 Daniel Webster Hwy, Nashua, NH 03060',state:'NH',lat:42.7831,lng:-71.5007,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // ME
+  {name:'Concentra Portland ME',addr:'2 Ledgeview Dr, Westbrook, ME 04092',state:'ME',lat:43.6859,lng:-70.3558,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  // VT
+  {name:'AFC Urgent Care – Burlington',addr:'1775 Williston Rd, South Burlington, VT 05403',state:'VT',lat:44.4561,lng:-73.1571,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // DE
+  {name:'Concentra Wilmington',addr:'501 Silverside Rd Ste 105, Wilmington, DE 19809',state:'DE',lat:39.7664,lng:-75.5366,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Dover',addr:'1217 N DuPont Hwy, Dover, DE 19901',state:'DE',lat:39.1763,lng:-75.5244,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // WV
+  {name:'Concentra Charleston WV',addr:'1116 Smith St, Charleston, WV 25301',state:'WV',lat:38.3534,lng:-81.6329,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  // MS
+  {name:'Concentra Jackson MS',addr:'188 E Capitol St Ste 825, Jackson, MS 39201',state:'MS',lat:32.2988,lng:-90.1848,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Hattiesburg',addr:'6264 US-98, Hattiesburg, MS 39402',state:'MS',lat:31.3273,lng:-89.3848,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // AR
+  {name:'Concentra Little Rock',addr:'10809 Executive Center Dr Ste 100, Little Rock, AR 72211',state:'AR',lat:34.7573,lng:-92.4021,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Fayetteville AR',addr:'3667 N Shiloh Dr Ste 1, Fayetteville, AR 72703',state:'AR',lat:36.1260,lng:-94.1821,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // IA
+  {name:'Concentra Des Moines',addr:'1601 22nd St Ste 500, West Des Moines, IA 50266',state:'IA',lat:41.5668,lng:-93.7858,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Cedar Rapids',addr:'3900 Edgewood Rd SW, Cedar Rapids, IA 52404',state:'IA',lat:41.9516,lng:-91.7268,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // NE
+  {name:'Concentra Omaha',addr:'10805 Farnam Dr Ste 200, Omaha, NE 68154',state:'NE',lat:41.2566,lng:-96.1323,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Lincoln',addr:'2900 S 70th St Ste 110, Lincoln, NE 68506',state:'NE',lat:40.7831,lng:-96.6443,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // SD
+  {name:'Concentra Sioux Falls',addr:'3101 W 41st St Ste 200, Sioux Falls, SD 57105',state:'SD',lat:43.5054,lng:-96.7904,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  // ND
+  {name:'Concentra Fargo',addr:'4141 28th Ave S Ste 100, Fargo, ND 58104',state:'ND',lat:46.8291,lng:-96.8518,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  // MT
+  {name:'AFC Urgent Care – Billings',addr:'2121 Rosebud Dr Ste B, Billings, MT 59102',state:'MT',lat:45.7776,lng:-108.5708,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // WY
+  {name:'AFC Urgent Care – Cheyenne',addr:'2804 E Lincolnway, Cheyenne, WY 82001',state:'WY',lat:41.1400,lng:-104.7832,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // ID
+  {name:'Concentra Boise',addr:'999 Main St Ste 1200, Boise, ID 83702',state:'ID',lat:43.6159,lng:-116.2023,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Nampa',addr:'617 12th Ave S, Nampa, ID 83651',state:'ID',lat:43.5741,lng:-116.5634,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // NM
+  {name:'Concentra Albuquerque',addr:'6811 Menaul Blvd NE Ste A, Albuquerque, NM 87110',state:'NM',lat:35.1306,lng:-106.5792,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Santa Fe',addr:'3490 Zafarano Dr Ste C, Santa Fe, NM 87507',state:'NM',lat:35.6441,lng:-105.9812,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // HI
+  {name:'Concentra Honolulu',addr:'1001 Bishop St Ste 2600, Honolulu, HI 96813',state:'HI',lat:21.3069,lng:-157.8583,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Kailua',addr:'609 Kailua Rd Ste 105, Kailua, HI 96734',state:'HI',lat:21.4022,lng:-157.7394,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // AK
+  {name:'Concentra Anchorage',addr:'3900 C St Ste 301, Anchorage, AK 99503',state:'AK',lat:61.1878,lng:-149.8669,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  // PR
+  {name:'Concentra San Juan',addr:'273 Ponce de León Ave Ste 900, San Juan, PR 00917',state:'PR',lat:18.4543,lng:-66.0741,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Bayamón',addr:'Carr 2 Km 11.3, Bayamón, PR 00961',state:'PR',lat:18.3987,lng:-66.1656,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  // CA - Los Angeles area
+  {name:'Skyline Health Group',addr:'3939 Atlantic Ave Ste 114, Long Beach, CA 90807',state:'CA',lat:33.8417,lng:-118.1764,phone:'N/A',hours:'Call for hours',tag:'Health Group'},
+  {name:'True Scan Solutions',addr:'4711 Artesia Blvd Ste C, Lawndale, CA 90260',state:'CA',lat:33.8895,lng:-118.3569,phone:'N/A',hours:'Call for hours',tag:'Lab'},
+  {name:'Two Executive Group',addr:'9047 Florence Ave Ste B, Downey, CA 90240',state:'CA',lat:33.9420,lng:-118.1260,phone:'N/A',hours:'Call for hours',tag:'Lab'},
+  {name:'Fastest Labs – Los Nietos',addr:'12215 Telegraph Rd Ste 103, Santa Fe Springs, CA 90670',state:'CA',lat:33.9800,lng:-118.0618,phone:'N/A',hours:'Call for hours',tag:'Fastest Labs'},
+  {name:'Integra Test',addr:'2814 W Lincoln Ave, Anaheim, CA 92801',state:'CA',lat:33.8389,lng:-117.9339,phone:'N/A',hours:'Call for hours',tag:'Lab'},
+  {name:'E&J Medical Services – Anaheim',addr:'333 S Magnolia Ave, Anaheim, CA 92804',state:'CA',lat:33.8269,lng:-117.9133,phone:'N/A',hours:'Call for hours',tag:'Medical'},
+  {name:'Fastest Labs – Anaheim',addr:'2331 W Lincoln Ave Ste 400, Anaheim, CA 92801',state:'CA',lat:33.8383,lng:-117.9289,phone:'N/A',hours:'Call for hours',tag:'Fastest Labs'},
+  {name:'ARCpoint Labs – Santa Fe Springs',addr:'8620 Sorensen Ave Ste 4, Santa Fe Springs, CA 90670',state:'CA',lat:33.9407,lng:-118.0600,phone:'N/A',hours:'Call for hours',tag:'ARCpoint'},
+  {name:'Concentra Long Beach',addr:'100 Oceangate Ste P245, Long Beach, CA 90802',state:'CA',lat:33.7701,lng:-118.1937,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'One Stop Fingerprinting',addr:'19201 S Reyes Ave, East Rancho Dominguez, CA 90221',state:'CA',lat:33.8797,lng:-118.2094,phone:'N/A',hours:'Call for hours',tag:'Lab'},
+  {name:'Agile Occ Med – Wilmington',addr:'445 E Anaheim St, Wilmington, CA 90744',state:'CA',lat:33.7845,lng:-118.2636,phone:'N/A',hours:'Call for hours',tag:'OccMed'},
+  {name:'Agile Occ Med – Lakewood',addr:'5203 Lakewood Blvd Ste B, Lakewood, CA 90712',state:'CA',lat:33.8529,lng:-118.1342,phone:'N/A',hours:'Call for hours',tag:'OccMed'},
+  {name:'Concentra Compton – Rancho Dominguez',addr:'2499 S Wilmington Ave, Compton, CA 90220',state:'CA',lat:33.8665,lng:-118.2252,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Fastest Labs – Gateway Cities',addr:'3331 E Artesia Blvd, Long Beach, CA 90805',state:'CA',lat:33.8736,lng:-118.1558,phone:'N/A',hours:'Call for hours',tag:'Fastest Labs'},
+  {name:'Concentra Torrance',addr:'1149 W 190th St, Gardena, CA 90248',state:'CA',lat:33.8628,lng:-118.3183,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Harbor Gateway',addr:'21081 S Western Ave Ste 150, Torrance, CA 90501',state:'CA',lat:33.8389,lng:-118.3140,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Gardena',addr:'16630 S Broadway, Gardena, CA 90248',state:'CA',lat:33.8693,lng:-118.2749,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'AFC Urgent Care – Torrance',addr:'24329 Crenshaw Blvd Ste A, Torrance, CA 90505',state:'CA',lat:33.8049,lng:-118.3365,phone:'N/A',hours:'Walk-in available',tag:'AFC Urgent Care'},
+  {name:'Agile Occ Med – Gardena',addr:'15401 S Main St, Gardena, CA 90248',state:'CA',lat:33.8654,lng:-118.2912,phone:'N/A',hours:'Call for hours',tag:'OccMed'},
+  {name:'Fastest Labs – Torrance',addr:'18156 Crenshaw Blvd, Torrance, CA 90504',state:'CA',lat:33.8419,lng:-118.3365,phone:'N/A',hours:'Call for hours',tag:'Fastest Labs'},
+  {name:'Concentra La Palma',addr:'40 Centerpointe Dr, La Palma, CA 90623',state:'CA',lat:33.8476,lng:-118.0471,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Santa Fe Springs',addr:'10400 Norwalk Blvd Ste 100, Santa Fe Springs, CA 90670',state:'CA',lat:33.9390,lng:-118.0692,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Commerce',addr:'3430 Garfield Ave, Commerce, CA 90040',state:'CA',lat:34.0008,lng:-118.1437,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Agile Occ Med – Commerce',addr:'6538 Telegraph Rd, Commerce, CA 90040',state:'CA',lat:33.9946,lng:-118.1426,phone:'N/A',hours:'Call for hours',tag:'OccMed'},
+  {name:'Ross Health Care Clinic',addr:'2476 S Atlantic Blvd, Commerce, CA 90040',state:'CA',lat:33.9897,lng:-118.1564,phone:'N/A',hours:'Call for hours',tag:'Clinic'},
+  {name:'Concentra Century Airport',addr:'5901 W Century Blvd Ste 150, Los Angeles, CA 90045',state:'CA',lat:33.9473,lng:-118.3882,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Vernon I (Soto)',addr:'3851 S Soto St, Vernon, CA 90058',state:'CA',lat:34.0008,lng:-118.2066,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra El Segundo',addr:'390 N Pacific Coast Hwy, El Segundo, CA 90245',state:'CA',lat:33.9215,lng:-118.4003,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  // CA - San Francisco / Bay Area
+  {name:'Concentra Potrero Hill',addr:'2 Connecticut St, San Francisco, CA 94107',state:'CA',lat:37.7587,lng:-122.3971,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Downtown San Francisco',addr:'26 California St, San Francisco, CA 94111',state:'CA',lat:37.7940,lng:-122.3981,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Oakland',addr:'384 Embarcadero W, Oakland, CA 94607',state:'CA',lat:37.7979,lng:-122.2856,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra San Francisco Airport',addr:'3 S Linden Ave, South San Francisco, CA 94080',state:'CA',lat:37.6545,lng:-122.4025,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Agile Occ Med – Oakland',addr:'80 Grand Ave Ste 500, Oakland, CA 94612',state:'CA',lat:37.8094,lng:-122.2728,phone:'N/A',hours:'Call for hours',tag:'OccMed'},
+  {name:'Concentra Berkeley',addr:'2850 7th St Ste 100, Berkeley, CA 94710',state:'CA',lat:37.8604,lng:-122.2973,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra Oakland Airport',addr:'333 Hegenberger Rd Ste 100, Oakland, CA 94621',state:'CA',lat:37.7378,lng:-122.2020,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+  {name:'Concentra San Leandro',addr:'2587 Merced St, San Leandro, CA 94577',state:'CA',lat:37.7265,lng:-122.1655,phone:'N/A',hours:'Call for hours',tag:'Concentra'},
+];
+
+// ── Static LabCorp locations – all 50 states + DC + PR ──
+const LABCORP_LOCS = [
+  // AL
+  {name:'LabCorp',addr:'800 St Vincents Dr Ste 500, Birmingham, AL 35205',state:'AL',lat:33.4914,lng:-86.8026,rating:3.3,phone:'(205) 933-8484',hours:'Mon–Fri 7AM–4PM'},
+  {name:'LabCorp',addr:'1600 Browns Ferry Rd, Huntsville, AL 35816',state:'AL',lat:34.7448,lng:-86.6675,rating:3.2,phone:'(256) 837-8010',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'4142 Carmichael Rd, Montgomery, AL 36106',state:'AL',lat:32.3668,lng:-86.2505,rating:3.1,phone:'(334) 213-1212',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'1700 Center St, Mobile, AL 36604',state:'AL',lat:30.6954,lng:-88.0484,rating:3.3,phone:'(251) 432-8921',hours:'Mon–Fri 7AM–3:30PM'},
+  // AK
+  {name:'LabCorp',addr:'3900 C St Ste 302, Anchorage, AK 99503',state:'AK',lat:61.1888,lng:-149.8659,rating:3.2,phone:'(907) 563-4115',hours:'Mon–Fri 7AM–4PM'},
+  // AZ
+  {name:'LabCorp',addr:'3101 N Central Ave Ste 160, Phoenix, AZ 85012',state:'AZ',lat:33.4860,lng:-112.0738,rating:3.1,phone:'(602) 285-0390',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'9375 E Shea Blvd Ste 100, Scottsdale, AZ 85260',state:'AZ',lat:33.5869,lng:-111.8896,rating:3.4,phone:'(480) 860-8383',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'6565 E Carondelet Dr Ste 155, Tucson, AZ 85710',state:'AZ',lat:32.1978,lng:-110.8383,rating:3.2,phone:'(520) 722-9300',hours:'Mon–Fri 7AM–3PM'},
+  {name:'LabCorp',addr:'1900 W Chandler Blvd Ste 15, Chandler, AZ 85224',state:'AZ',lat:33.3062,lng:-111.8968,rating:3.3,phone:'(480) 786-7170',hours:'Mon–Fri 7AM–3:30PM'},
+  // AR
+  {name:'LabCorp',addr:'10825 Executive Center Dr Ste 500, Little Rock, AR 72211',state:'AR',lat:34.7589,lng:-92.4021,rating:3.2,phone:'(501) 227-1780',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'1001 Towson Ave Ste 301, Fort Smith, AR 72901',state:'AR',lat:35.3859,lng:-94.4232,rating:3.2,phone:'(479) 785-2000',hours:'Mon–Fri 7AM–3:30PM'},
+  // CA
+  {name:'LabCorp',addr:'2233 Post St Ste 105, San Francisco, CA 94115',state:'CA',lat:37.7843,lng:-122.4386,rating:2.7,phone:'(415) 928-0199',hours:'Mon–Fri 7AM–3PM'},
+  {name:'LabCorp',addr:'1825 E Cesar E Chavez Ave, Los Angeles, CA 90033',state:'CA',lat:34.0507,lng:-118.2155,rating:2.8,phone:'(323) 441-0181',hours:'Mon–Fri 6:30AM–2PM'},
+  {name:'LabCorp',addr:'7525 Metropolitan Dr Ste 205, San Diego, CA 92108',state:'CA',lat:32.7788,lng:-117.1372,rating:3.3,phone:'(619) 574-6500',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'1717 L St Ste 300, Sacramento, CA 95811',state:'CA',lat:38.5742,lng:-121.4946,rating:3.2,phone:'(916) 447-1460',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'100 N Winchester Blvd Ste 150, Santa Clara, CA 95050',state:'CA',lat:37.3502,lng:-121.9532,rating:3.4,phone:'(408) 247-5050',hours:'Mon–Fri 7AM–3:30PM'},
+  // CO
+  {name:'LabCorp',addr:'3600 S Yosemite St Ste 480, Denver, CO 80237',state:'CO',lat:39.6476,lng:-104.8988,rating:3.4,phone:'(303) 488-0506',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'1411 S Potomac St Ste 275, Aurora, CO 80012',state:'CO',lat:39.6985,lng:-104.8230,rating:3.1,phone:'(303) 755-0830',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'2750 Broadway Ste 1L, Boulder, CO 80304',state:'CO',lat:40.0376,lng:-105.2797,rating:3.4,phone:'(303) 440-4748',hours:'Mon–Fri 7AM–3:30PM'},
+  // CT
+  {name:'LabCorp',addr:'100 Constitution Plaza Ste 900, Hartford, CT 06103',state:'CT',lat:41.7652,lng:-72.6715,rating:3.3,phone:'(860) 241-3200',hours:'Mon–Fri 7AM–4PM'},
+  {name:'LabCorp',addr:'800 Howard Ave Ste G1-100, New Haven, CT 06519',state:'CT',lat:41.3024,lng:-72.9358,rating:3.2,phone:'(203) 785-2886',hours:'Mon–Fri 7AM–3:30PM'},
+  // DE
+  {name:'LabCorp',addr:'3803 Kennett Pike Ste 200, Wilmington, DE 19807',state:'DE',lat:39.7805,lng:-75.5626,rating:3.3,phone:'(302) 426-9070',hours:'Mon–Fri 7AM–3:30PM'},
+  // DC
+  {name:'LabCorp',addr:'1730 K St NW Ste 1000, Washington, DC 20006',state:'DC',lat:38.9010,lng:-77.0388,rating:3.3,phone:'(202) 659-5450',hours:'Mon–Fri 7AM–4PM'},
+  {name:'LabCorp',addr:'4000 Wisconsin Ave NW, Washington, DC 20016',state:'DC',lat:38.9462,lng:-77.0637,rating:3.2,phone:'(202) 244-7717',hours:'Mon–Fri 7AM–3:30PM'},
+  // FL
+  {name:'LabCorp',addr:'5610 W La Salle St, Tampa, FL 33607',state:'FL',lat:27.9547,lng:-82.5395,rating:3.9,phone:'(813) 289-5227',hours:'Mon–Fri 7AM–3PM'},
+  {name:'LabCorp',addr:'5425 S Semoran Blvd, Orlando, FL 32822',state:'FL',lat:28.4838,lng:-81.3094,rating:2.2,phone:'(407) 382-5035',hours:'Mon–Fri 6:30AM–3PM'},
+  {name:'LabCorp',addr:'3100 SW 62nd Ct Ste 8-130, Miami, FL 33155',state:'FL',lat:25.7416,lng:-80.2957,rating:4.3,phone:'(855) 322-2925',hours:'Mon–Fri 9AM–4PM'},
+  {name:'LabCorp',addr:'4500 San Pablo Rd S, Jacksonville, FL 32224',state:'FL',lat:30.2372,lng:-81.5284,rating:3.4,phone:'(904) 996-1180',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'1800 E Oakland Park Blvd Ste 100, Fort Lauderdale, FL 33334',state:'FL',lat:26.1695,lng:-80.1024,rating:3.2,phone:'(954) 563-5100',hours:'Mon–Fri 7AM–3:30PM'},
+  // GA
+  {name:'LabCorp',addr:'5673 Peachtree Dunwoody Rd Ste 530, Atlanta, GA 30342',state:'GA',lat:33.9040,lng:-84.3518,rating:3.2,phone:'(404) 255-7744',hours:'Mon–Fri 7AM–4PM'},
+  {name:'LabCorp',addr:'4849 Waters Ave Ste 101, Savannah, GA 31404',state:'GA',lat:32.0186,lng:-81.1010,rating:3.5,phone:'(912) 352-9501',hours:'Mon–Fri 7AM–3PM'},
+  {name:'LabCorp',addr:'4351 Northside Dr Ste 500, Macon, GA 31210',state:'GA',lat:32.8984,lng:-83.7003,rating:3.2,phone:'(478) 474-7701',hours:'Mon–Fri 7AM–3:30PM'},
+  // HI
+  {name:'LabCorp',addr:'1380 Lusitana St Ste 503, Honolulu, HI 96813',state:'HI',lat:21.2996,lng:-157.8472,rating:3.3,phone:'(808) 523-7171',hours:'Mon–Fri 7AM–3:30PM'},
+  // ID
+  {name:'LabCorp',addr:'6666 W Emerald St Ste 100, Boise, ID 83704',state:'ID',lat:43.6066,lng:-116.2746,rating:3.3,phone:'(208) 377-8448',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'777 Hospital Way Ste 300, Pocatello, ID 83201',state:'ID',lat:42.8713,lng:-112.4669,rating:3.2,phone:'(208) 239-1960',hours:'Mon–Fri 7AM–3:30PM'},
+  // IL
+  {name:'LabCorp',addr:'30 N Michigan Ave Ste 1900, Chicago, IL 60602',state:'IL',lat:41.8825,lng:-87.6241,rating:3.1,phone:'(312) 346-8717',hours:'Mon–Fri 7AM–4PM'},
+  {name:'LabCorp',addr:'3209 N Halsted St, Chicago, IL 60657',state:'IL',lat:41.9388,lng:-87.6488,rating:3.4,phone:'(773) 248-1050',hours:'Mon–Fri 7AM–4PM'},
+  {name:'LabCorp',addr:'1025 S 6th St Ste 100, Springfield, IL 62703',state:'IL',lat:39.7892,lng:-89.6495,rating:3.2,phone:'(217) 528-7100',hours:'Mon–Fri 7AM–3:30PM'},
+  // IN
+  {name:'LabCorp',addr:'8040 Clearvista Pkwy Ste 350, Indianapolis, IN 46256',state:'IN',lat:39.9197,lng:-86.0088,rating:3.2,phone:'(317) 841-4114',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'11141 Parkview Plaza Dr Ste 500, Fort Wayne, IN 46845',state:'IN',lat:41.1348,lng:-85.0731,rating:3.3,phone:'(260) 637-5888',hours:'Mon–Fri 7AM–3:30PM'},
+  // IA
+  {name:'LabCorp',addr:'1212 Pleasant St Ste 202, Des Moines, IA 50309',state:'IA',lat:41.5868,lng:-93.6250,rating:3.2,phone:'(515) 243-5195',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'4515 N Brady St Ste 200, Davenport, IA 52806',state:'IA',lat:41.5705,lng:-90.5960,rating:3.2,phone:'(563) 386-5050',hours:'Mon–Fri 7AM–3:30PM'},
+  // KS
+  {name:'LabCorp',addr:'929 N St Francis Ave, Wichita, KS 67214',state:'KS',lat:37.6976,lng:-97.3374,rating:3.2,phone:'(316) 267-5171',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'7015 College Blvd Ste 200, Overland Park, KS 66211',state:'KS',lat:38.9101,lng:-94.6769,rating:3.3,phone:'(913) 345-9966',hours:'Mon–Fri 7AM–3:30PM'},
+  // KY
+  {name:'LabCorp',addr:'4003 Kresge Way Ste 101, Louisville, KY 40207',state:'KY',lat:38.2683,lng:-85.6603,rating:3.3,phone:'(502) 895-8855',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'1401 Harrodsburg Rd Ste B180, Lexington, KY 40504',state:'KY',lat:38.0169,lng:-84.5435,rating:3.2,phone:'(859) 276-3366',hours:'Mon–Fri 7AM–3:30PM'},
+  // LA
+  {name:'LabCorp',addr:'3601 Houma Blvd Ste 204, Metairie, LA 70006',state:'LA',lat:29.9912,lng:-90.1788,rating:3.2,phone:'(504) 887-1450',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'7373 United Plaza Blvd Ste 400, Baton Rouge, LA 70809',state:'LA',lat:30.4101,lng:-91.1088,rating:3.3,phone:'(225) 926-9500',hours:'Mon–Fri 7AM–3:30PM'},
+  // ME
+  {name:'LabCorp',addr:'887 Forest Ave Ste 200, Portland, ME 04103',state:'ME',lat:43.6748,lng:-70.2989,rating:3.3,phone:'(207) 775-2100',hours:'Mon–Fri 7AM–3:30PM'},
+  // MD
+  {name:'LabCorp',addr:'6569 N Charles St Ste 101, Baltimore, MD 21212',state:'MD',lat:39.3715,lng:-76.6307,rating:3.3,phone:'(410) 377-4144',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'8630 Fenton St Ste 1000, Silver Spring, MD 20910',state:'MD',lat:38.9971,lng:-77.0266,rating:3.2,phone:'(301) 589-8998',hours:'Mon–Fri 7AM–4PM'},
+  // MA
+  {name:'LabCorp',addr:'175 Cambridge St Ste 105, Boston, MA 02114',state:'MA',lat:42.3606,lng:-71.0665,rating:3.4,phone:'(617) 723-1990',hours:'Mon–Fri 7AM–4PM'},
+  {name:'LabCorp',addr:'1101 Beacon St Ste 7W, Brookline, MA 02446',state:'MA',lat:42.3482,lng:-71.1205,rating:3.5,phone:'(617) 277-3990',hours:'Mon–Fri 7AM–3PM'},
+  // MI
+  {name:'LabCorp',addr:'30100 Telegraph Rd Ste 360, Bingham Farms, MI 48025',state:'MI',lat:42.5235,lng:-83.2731,rating:3.3,phone:'(248) 642-7770',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'221 Michigan St NE Ste 101, Grand Rapids, MI 49503',state:'MI',lat:42.9651,lng:-85.6609,rating:3.4,phone:'(616) 459-7700',hours:'Mon–Fri 7AM–3:30PM'},
+  // MN
+  {name:'LabCorp',addr:'825 Nicollet Mall Ste 808, Minneapolis, MN 55402',state:'MN',lat:44.9764,lng:-93.2742,rating:3.3,phone:'(612) 338-5771',hours:'Mon–Fri 7AM–4PM'},
+  {name:'LabCorp',addr:'21 1st St SW Ste 220, Rochester, MN 55902',state:'MN',lat:44.0235,lng:-92.4699,rating:3.4,phone:'(507) 280-2440',hours:'Mon–Fri 7AM–3:30PM'},
+  // MS
+  {name:'LabCorp',addr:'1020 River Oaks Dr, Flowood, MS 39232',state:'MS',lat:32.3350,lng:-90.0934,rating:3.2,phone:'(601) 420-6282',hours:'Mon–Fri 7AM–3:30PM'},
+  // MO
+  {name:'LabCorp',addr:'12400 Olive Blvd Ste 205, Creve Coeur, MO 63141',state:'MO',lat:38.6604,lng:-90.4472,rating:3.2,phone:'(314) 569-0180',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'4600 Madison Ave Ste 1100, Kansas City, MO 64112',state:'MO',lat:39.0340,lng:-94.5886,rating:3.3,phone:'(816) 753-0300',hours:'Mon–Fri 7AM–3:30PM'},
+  // MT
+  {name:'LabCorp',addr:'1001 S 24th St W Ste 200, Billings, MT 59102',state:'MT',lat:45.7835,lng:-108.5651,rating:3.2,phone:'(406) 652-6500',hours:'Mon–Fri 7AM–3:30PM'},
+  // NE
+  {name:'LabCorp',addr:'8031 W Center Rd Ste 112, Omaha, NE 68124',state:'NE',lat:41.2437,lng:-96.1198,rating:3.3,phone:'(402) 397-3988',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'7101 Stephanie Ln Ste 300, Lincoln, NE 68516',state:'NE',lat:40.7474,lng:-96.6720,rating:3.3,phone:'(402) 421-7500',hours:'Mon–Fri 7AM–3:30PM'},
+  // NV
+  {name:'LabCorp',addr:'3900 Paradise Rd Ste 100, Las Vegas, NV 89169',state:'NV',lat:36.1282,lng:-115.1459,rating:3.1,phone:'(702) 737-8800',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'10001 S Eastern Ave Ste 101, Henderson, NV 89052',state:'NV',lat:36.0177,lng:-115.0944,rating:3.2,phone:'(702) 260-6005',hours:'Mon–Fri 7AM–3:30PM'},
+  // NH
+  {name:'LabCorp',addr:'100 S Commercial St Ste 600, Manchester, NH 03101',state:'NH',lat:42.9899,lng:-71.4637,rating:3.3,phone:'(603) 627-3090',hours:'Mon–Fri 7AM–3:30PM'},
+  // NJ
+  {name:'LabCorp',addr:'106 Valley St, South Orange, NJ 07079',state:'NJ',lat:40.7438,lng:-74.2598,rating:4.3,phone:'(973) 782-2747',hours:'Mon–Fri 9AM–5PM'},
+  {name:'LabCorp',addr:'125 Paterson St, New Brunswick, NJ 08901',state:'NJ',lat:40.4947,lng:-74.4492,rating:3.9,phone:'(732) 709-7175',hours:'Mon–Fri 8AM–4PM'},
+  {name:'LabCorp',addr:'2211 Chapel Ave W, Cherry Hill, NJ 08002',state:'NJ',lat:39.9280,lng:-75.0156,rating:3.8,phone:'(856) 846-9798',hours:'Mon–Fri 7:15AM–4:30PM'},
+  // NM
+  {name:'LabCorp',addr:'2311 San Pedro Dr NE Ste D, Albuquerque, NM 87110',state:'NM',lat:35.1195,lng:-106.5776,rating:3.2,phone:'(505) 883-2290',hours:'Mon–Fri 7AM–3:30PM'},
+  // NY
+  {name:'LabCorp',addr:'120 9th Ave, New York, NY 10011',state:'NY',lat:40.7431,lng:-74.0036,rating:2.6,phone:'(646) 847-3937',hours:'Mon–Fri 9AM–5PM'},
+  {name:'LabCorp',addr:'5 E 98th St, New York, NY 10029',state:'NY',lat:40.7891,lng:-73.9539,rating:4.0,phone:'(212) 289-4358',hours:'Mon–Fri 7AM–6PM'},
+  {name:'LabCorp',addr:'295 Essjay Rd Ste 100, Buffalo, NY 14221',state:'NY',lat:42.9715,lng:-78.7304,rating:3.3,phone:'(716) 631-1700',hours:'Mon–Fri 7AM–4PM'},
+  {name:'LabCorp',addr:'100 Kings Hwy S Ste 300, Rochester, NY 14617',state:'NY',lat:43.1822,lng:-77.5771,rating:3.4,phone:'(585) 342-8020',hours:'Mon–Fri 7AM–3:30PM'},
+  // NC
+  {name:'LabCorp',addr:'2709 Randolph Rd Ste 100, Charlotte, NC 28207',state:'NC',lat:35.2178,lng:-80.8136,rating:3.3,phone:'(704) 333-5900',hours:'Mon–Fri 7AM–4PM'},
+  {name:'LabCorp',addr:'3800 Merton Dr Ste 200, Raleigh, NC 27609',state:'NC',lat:35.8397,lng:-78.6688,rating:3.4,phone:'(919) 782-6800',hours:'Mon–Fri 7AM–4PM'},
+  // ND
+  {name:'LabCorp',addr:'3400 S University Dr Ste 102, Fargo, ND 58104',state:'ND',lat:46.8293,lng:-96.8500,rating:3.2,phone:'(701) 282-9120',hours:'Mon–Fri 7AM–3:30PM'},
+  // OH
+  {name:'LabCorp',addr:'4675 Olentangy River Rd Ste 100, Columbus, OH 43214',state:'OH',lat:40.0427,lng:-83.0244,rating:3.3,phone:'(614) 459-7551',hours:'Mon–Fri 7AM–4PM'},
+  {name:'LabCorp',addr:'5000 Mayfield Rd Ste 112, Lyndhurst, OH 44124',state:'OH',lat:41.5173,lng:-81.5078,rating:3.2,phone:'(440) 442-0888',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'8049 Hosbrook Rd Ste 203, Cincinnati, OH 45236',state:'OH',lat:39.2219,lng:-84.3803,rating:3.4,phone:'(513) 891-8855',hours:'Mon–Fri 7AM–3:30PM'},
+  // OK
+  {name:'LabCorp',addr:'4323 NW 63rd St Ste 200, Oklahoma City, OK 73116',state:'OK',lat:35.5191,lng:-97.5736,rating:3.2,phone:'(405) 848-1776',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'6120 E Skelly Dr Ste 700, Tulsa, OK 74135',state:'OK',lat:36.0726,lng:-95.9116,rating:3.3,phone:'(918) 665-0585',hours:'Mon–Fri 7AM–3:30PM'},
+  // OR
+  {name:'LabCorp',addr:'9155 SW Barnes Rd Ste 534, Portland, OR 97225',state:'OR',lat:45.5150,lng:-122.7578,rating:3.3,phone:'(503) 297-4800',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'2020 Capitol St NE Ste 100, Salem, OR 97301',state:'OR',lat:44.9429,lng:-123.0272,rating:3.2,phone:'(503) 399-0400',hours:'Mon–Fri 7AM–3:30PM'},
+  // PA
+  {name:'LabCorp',addr:'33 S 9th St 2nd Fl, Philadelphia, PA 19107',state:'PA',lat:39.9503,lng:-75.1552,rating:2.8,phone:'(267) 689-9448',hours:'Mon–Fri 7AM–5PM'},
+  {name:'LabCorp',addr:'2 Bala Plaza Ste IL-21, Bala Cynwyd, PA 19004',state:'PA',lat:40.0067,lng:-75.2169,rating:3.3,phone:'(610) 667-2948',hours:'Mon–Fri 8AM–3:30PM'},
+  {name:'LabCorp',addr:'11279 Perry Hwy Ste 407, Wexford, PA 15090',state:'PA',lat:40.6345,lng:-80.0649,rating:3.4,phone:'(724) 935-7820',hours:'Mon–Fri 7AM–3:30PM'},
+  // PR
+  {name:'LabCorp',addr:'275 Ponce de León Ave Ste 100, San Juan, PR 00917',state:'PR',lat:18.4540,lng:-66.0731,rating:3.3,phone:'(787) 763-9100',hours:'Mon–Fri 7AM–4PM'},
+  {name:'LabCorp',addr:'Road 167 KM 8.2, Bayamón, PR 00960',state:'PR',lat:18.3790,lng:-66.1484,rating:3.2,phone:'(787) 799-9090',hours:'Mon–Fri 7AM–3:30PM'},
+  // RI
+  {name:'LabCorp',addr:'364 Eddy St, Providence, RI 02903',state:'RI',lat:41.8168,lng:-71.4109,rating:3.2,phone:'(401) 273-5300',hours:'Mon–Fri 7AM–3:30PM'},
+  // SC
+  {name:'LabCorp',addr:'1613 Main St Ste 201, Columbia, SC 29201',state:'SC',lat:34.0011,lng:-81.0310,rating:3.2,phone:'(803) 799-0555',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'200 Patewood Dr Ste B100, Greenville, SC 29615',state:'SC',lat:34.8499,lng:-82.2765,rating:3.3,phone:'(864) 676-0070',hours:'Mon–Fri 7AM–3:30PM'},
+  // SD
+  {name:'LabCorp',addr:'3900 W 49th St Ste 104, Sioux Falls, SD 57106',state:'SD',lat:43.4876,lng:-96.8012,rating:3.2,phone:'(605) 361-8600',hours:'Mon–Fri 7AM–3:30PM'},
+  // TN
+  {name:'LabCorp',addr:'3443 Dickerson Pike Ste 800, Nashville, TN 37207',state:'TN',lat:36.2152,lng:-86.7594,rating:3.2,phone:'(615) 865-8880',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'6005 Park Ave Ste 310, Memphis, TN 38119',state:'TN',lat:35.0898,lng:-89.8711,rating:3.3,phone:'(901) 683-6699',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'6611 Kingston Pike Ste 108, Knoxville, TN 37919',state:'TN',lat:35.9277,lng:-84.0499,rating:3.4,phone:'(865) 584-6000',hours:'Mon–Fri 7AM–3:30PM'},
+  // TX
+  {name:'LabCorp',addr:'2600 S Gessner Rd Ste 105, Houston, TX 77063',state:'TX',lat:29.7354,lng:-95.5446,rating:3.2,phone:'(713) 334-0200',hours:'Mon–Fri 7AM–4PM'},
+  {name:'LabCorp',addr:'5944 Greenville Ave Ste 1115, Dallas, TX 75206',state:'TX',lat:32.8372,lng:-96.7656,rating:3.5,phone:'(214) 363-3135',hours:'Mon–Fri 7AM–4PM'},
+  {name:'LabCorp',addr:'4499 Medical Dr Ste 160, San Antonio, TX 78229',state:'TX',lat:29.5147,lng:-98.5694,rating:3.1,phone:'(210) 614-2266',hours:'Mon–Fri 7AM–4PM'},
+  {name:'LabCorp',addr:'6500 N MoPac Expy Ste 1100, Austin, TX 78731',state:'TX',lat:30.3708,lng:-97.7525,rating:3.4,phone:'(512) 346-5282',hours:'Mon–Fri 7AM–4PM'},
+  // UT
+  {name:'LabCorp',addr:'5126 S State St, Murray, UT 84107',state:'UT',lat:40.6439,lng:-111.8908,rating:3.2,phone:'(801) 288-2200',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'1055 N 500 W Ste 100, Provo, UT 84604',state:'UT',lat:40.2551,lng:-111.6619,rating:3.3,phone:'(801) 374-0900',hours:'Mon–Fri 7AM–3:30PM'},
+  // VT
+  {name:'LabCorp',addr:'1 S Prospect St Ste 1000, Burlington, VT 05401',state:'VT',lat:44.4762,lng:-73.2003,rating:3.3,phone:'(802) 656-8930',hours:'Mon–Fri 7AM–3:30PM'},
+  // VA
+  {name:'LabCorp',addr:'7001 Forest Ave Ste 200, Richmond, VA 23229',state:'VA',lat:37.5962,lng:-77.5428,rating:3.3,phone:'(804) 288-5950',hours:'Mon–Fri 7AM–4PM'},
+  {name:'LabCorp',addr:'8001 Braddock Rd Ste 204, Springfield, VA 22151',state:'VA',lat:38.7879,lng:-77.2193,rating:3.4,phone:'(703) 321-0101',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'6160 Kempsville Cir Ste 200A, Norfolk, VA 23502',state:'VA',lat:36.8664,lng:-76.2125,rating:3.2,phone:'(757) 461-0017',hours:'Mon–Fri 7AM–3:30PM'},
+  // WA
+  {name:'LabCorp',addr:'1200 E Madison St Ste 100, Seattle, WA 98122',state:'WA',lat:47.6121,lng:-122.3058,rating:3.3,phone:'(206) 323-3560',hours:'Mon–Fri 7AM–4PM'},
+  {name:'LabCorp',addr:'1200 112th Ave NE Ste C110, Bellevue, WA 98004',state:'WA',lat:47.6155,lng:-122.1936,rating:3.4,phone:'(425) 454-9150',hours:'Mon–Fri 7AM–3:30PM'},
+  // WV
+  {name:'LabCorp',addr:'1600 Kanawha Blvd E, Charleston, WV 25311',state:'WV',lat:38.3498,lng:-81.6219,rating:3.2,phone:'(304) 343-6200',hours:'Mon–Fri 7AM–3:30PM'},
+  // WI
+  {name:'LabCorp',addr:'2350 N Oakland Ave Ste 105, Milwaukee, WI 53211',state:'WI',lat:43.0801,lng:-87.8847,rating:3.3,phone:'(414) 961-4100',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'LabCorp',addr:'5150 E Terrace Dr Ste 100, Madison, WI 53718',state:'WI',lat:43.1239,lng:-89.3210,rating:3.4,phone:'(608) 244-5566',hours:'Mon–Fri 7AM–3:30PM'},
+  // WY
+  {name:'LabCorp',addr:'2301 House Ave Ste 208, Cheyenne, WY 82001',state:'WY',lat:41.1397,lng:-104.8121,rating:3.2,phone:'(307) 778-8700',hours:'Mon–Fri 7AM–3:30PM'},
+];
+
+// ── Static Quest Diagnostics locations – all 50 states + DC + PR ──
+const QUEST_LOCS = [
+  // AL
+  {name:'Quest Diagnostics',addr:'800 Montclair Rd Ste 100, Birmingham, AL 35213',state:'AL',lat:33.5137,lng:-86.7534,rating:3.4,phone:'(205) 591-9000',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'2801 Bob Wallace Ave Ste 200, Huntsville, AL 35805',state:'AL',lat:34.7165,lng:-86.6414,rating:3.3,phone:'(256) 533-9090',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'4371 Narrow Lane Rd Ste 100, Montgomery, AL 36116',state:'AL',lat:32.3313,lng:-86.2344,rating:3.2,phone:'(334) 284-8900',hours:'Mon–Fri 6:30AM–3:30PM'},
+  {name:'Quest Diagnostics',addr:'1200 Airport Heights Dr, Mobile, AL 36608',state:'AL',lat:30.7142,lng:-88.1141,rating:3.4,phone:'(251) 344-5600',hours:'Mon–Fri 6:30AM–4PM'},
+  // AK
+  {name:'Quest Diagnostics',addr:'201 E 56th Ave Ste 100, Anchorage, AK 99518',state:'AK',lat:61.1726,lng:-149.8837,rating:3.3,phone:'(907) 743-5600',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'1867 Airport Way Ste 100, Fairbanks, AK 99701',state:'AK',lat:64.8015,lng:-147.8760,rating:3.2,phone:'(907) 456-7200',hours:'Mon–Fri 7AM–3:30PM'},
+  // AZ
+  {name:'Quest Diagnostics',addr:'2820 E Dunlap Ave Ste 8, Phoenix, AZ 85028',state:'AZ',lat:33.5629,lng:-111.9981,rating:3.3,phone:'(602) 996-9455',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'1515 E Broadway Rd Ste 100, Tempe, AZ 85282',state:'AZ',lat:33.4077,lng:-111.9049,rating:3.5,phone:'(480) 966-8997',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'4400 N Oracle Rd Ste 109, Tucson, AZ 85705',state:'AZ',lat:32.2893,lng:-110.9779,rating:3.4,phone:'(520) 887-7793',hours:'Mon–Fri 6:30AM–3:30PM'},
+  {name:'Quest Diagnostics',addr:'1837 S Dobson Rd Ste 101, Mesa, AZ 85202',state:'AZ',lat:33.3977,lng:-111.8855,rating:3.5,phone:'(480) 833-3500',hours:'Mon–Fri 6:30AM–4PM'},
+  // AR
+  {name:'Quest Diagnostics',addr:'11321 W Markham St Ste 120, Little Rock, AR 72211',state:'AR',lat:34.7479,lng:-92.4094,rating:3.3,phone:'(501) 224-5000',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'3706 W Wedington Dr Ste 101, Fayetteville, AR 72704',state:'AR',lat:36.0784,lng:-94.2222,rating:3.4,phone:'(479) 521-4455',hours:'Mon–Fri 6:30AM–4PM'},
+  // CA
+  {name:'Quest Diagnostics',addr:'139 Centre St Ste 207, New York, NY 10013',state:'NY',lat:40.7175,lng:-74.0008,rating:3.8,phone:'(212) 343-0242',hours:'Mon–Fri 8AM–6:30PM'},
+  {name:'Quest Diagnostics',addr:'1414 S Grand Ave Ste 180, Los Angeles, CA 90015',state:'CA',lat:34.0365,lng:-118.2654,rating:3.8,phone:'(213) 765-0457',hours:'Mon–Fri 7AM–5PM'},
+  {name:'Quest Diagnostics',addr:'5171 Ruffin Rd Ste A, San Diego, CA 92123',state:'CA',lat:32.7942,lng:-117.1494,rating:3.5,phone:'(858) 571-5600',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'4600 Watt Ave Ste 200, North Highlands, CA 95660',state:'CA',lat:38.6878,lng:-121.3726,rating:3.4,phone:'(916) 339-2020',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'5795 Cottle Rd Ste 1, San Jose, CA 95123',state:'CA',lat:37.2453,lng:-121.8244,rating:3.5,phone:'(408) 629-5500',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'1700 E Herndon Ave Ste 104, Fresno, CA 93720',state:'CA',lat:36.8878,lng:-119.7727,rating:3.4,phone:'(559) 431-6900',hours:'Mon–Fri 6:30AM–4PM'},
+  // CO
+  {name:'Quest Diagnostics',addr:'1600 Glenarm Pl Ste 100, Denver, CO 80202',state:'CO',lat:39.7370,lng:-104.9888,rating:3.4,phone:'(303) 595-1700',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'7151 W 20th Ave Ste 7, Lakewood, CO 80214',state:'CO',lat:39.7386,lng:-105.1010,rating:3.3,phone:'(303) 238-6299',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'4800 Baseline Rd Ste D-113, Boulder, CO 80303',state:'CO',lat:39.9990,lng:-105.2383,rating:3.5,phone:'(303) 494-8866',hours:'Mon–Fri 6:30AM–4PM'},
+  // CT
+  {name:'Quest Diagnostics',addr:'1 High Ridge Park, Stamford, CT 06905',state:'CT',lat:41.1143,lng:-73.5487,rating:3.5,phone:'(203) 329-2525',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'2200 Whitney Ave, Hamden, CT 06518',state:'CT',lat:41.3798,lng:-72.9242,rating:3.4,phone:'(203) 288-8200',hours:'Mon–Fri 6:30AM–4PM'},
+  // DE
+  {name:'Quest Diagnostics',addr:'3706 Kennett Pike Ste 100, Wilmington, DE 19807',state:'DE',lat:39.7830,lng:-75.5598,rating:3.4,phone:'(302) 654-8300',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'700 Walker Rd Ste 103, Dover, DE 19904',state:'DE',lat:39.1576,lng:-75.5342,rating:3.3,phone:'(302) 674-1100',hours:'Mon–Fri 6:30AM–4PM'},
+  // DC
+  {name:'Quest Diagnostics',addr:'1000 Vermont Ave NW Ste 1210, Washington, DC 20005',state:'DC',lat:38.9010,lng:-77.0317,rating:3.5,phone:'(202) 393-9110',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'645 H St NE, Washington, DC 20002',state:'DC',lat:38.8993,lng:-76.9974,rating:3.4,phone:'(202) 546-3200',hours:'Mon–Fri 7AM–4PM'},
+  // FL
+  {name:'Quest Diagnostics',addr:'1050 NW 14th St Ste 110, Miami, FL 33136',state:'FL',lat:25.7874,lng:-80.2125,rating:2.8,phone:'(305) 545-3004',hours:'Mon–Fri 6:30AM–3:30PM'},
+  {name:'Quest Diagnostics',addr:'4555 Emerson St Ste 200, Jacksonville, FL 32207',state:'FL',lat:30.3162,lng:-81.6468,rating:3.5,phone:'(904) 398-2296',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'2904 W Henderson Blvd, Tampa, FL 33609',state:'FL',lat:27.9399,lng:-82.5038,rating:3.5,phone:'(813) 875-9500',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'2900 W Cypress Creek Rd, Fort Lauderdale, FL 33309',state:'FL',lat:26.2158,lng:-80.1699,rating:3.4,phone:'(954) 979-9700',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'6360 Central Ave, St. Petersburg, FL 33707',state:'FL',lat:27.7699,lng:-82.7144,rating:3.4,phone:'(727) 345-0055',hours:'Mon–Fri 6:30AM–4PM'},
+  // GA
+  {name:'Quest Diagnostics',addr:'3193 Howell Mill Rd NW, Atlanta, GA 30327',state:'GA',lat:33.8286,lng:-84.4113,rating:3.6,phone:'(404) 352-8555',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'1303 D Antioch Rd, Augusta, GA 30906',state:'GA',lat:33.3752,lng:-81.9977,rating:3.3,phone:'(706) 793-1141',hours:'Mon–Fri 6:30AM–3:30PM'},
+  {name:'Quest Diagnostics',addr:'4120 Napier Ave Ste 250, Macon, GA 31210',state:'GA',lat:32.8825,lng:-83.7193,rating:3.4,phone:'(478) 476-1000',hours:'Mon–Fri 6:30AM–4PM'},
+  // HI
+  {name:'Quest Diagnostics',addr:'1099 Alakea St Ste 1900, Honolulu, HI 96813',state:'HI',lat:21.3078,lng:-157.8583,rating:3.5,phone:'(808) 524-1455',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'45 Mohouli St, Hilo, HI 96720',state:'HI',lat:19.7241,lng:-155.0900,rating:3.3,phone:'(808) 969-6633',hours:'Mon–Fri 6:30AM–3:30PM'},
+  // ID
+  {name:'Quest Diagnostics',addr:'8160 W Overland Rd Ste 100, Boise, ID 83709',state:'ID',lat:43.5827,lng:-116.2879,rating:3.4,phone:'(208) 377-5540',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'444 Hospital Way Ste 400, Pocatello, ID 83201',state:'ID',lat:42.8622,lng:-112.4660,rating:3.3,phone:'(208) 232-3510',hours:'Mon–Fri 6:30AM–4PM'},
+  // IL
+  {name:'Quest Diagnostics',addr:'25 E Washington St Ste 930, Chicago, IL 60602',state:'IL',lat:41.8833,lng:-87.6280,rating:3.3,phone:'(312) 782-8999',hours:'Mon–Fri 7AM–5PM'},
+  {name:'Quest Diagnostics',addr:'3459 N Clark St, Chicago, IL 60657',state:'IL',lat:41.9445,lng:-87.6561,rating:3.5,phone:'(773) 296-3000',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'3132 Old Jacksonville Rd, Springfield, IL 62704',state:'IL',lat:39.7676,lng:-89.7071,rating:3.4,phone:'(217) 787-1900',hours:'Mon–Fri 6:30AM–4PM'},
+  // IN
+  {name:'Quest Diagnostics',addr:'8040 Clearvista Pkwy Ste 380, Indianapolis, IN 46256',state:'IN',lat:39.9197,lng:-86.0078,rating:3.4,phone:'(317) 849-3399',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'4810 Walnut St Ste 103, Evansville, IN 47710',state:'IN',lat:37.9888,lng:-87.5621,rating:3.3,phone:'(812) 471-9990',hours:'Mon–Fri 6:30AM–3:30PM'},
+  // IA
+  {name:'Quest Diagnostics',addr:'11900 University Ave, Clive, IA 50325',state:'IA',lat:41.5965,lng:-93.7706,rating:3.3,phone:'(515) 222-5300',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'3810 1st Ave SE, Cedar Rapids, IA 52402',state:'IA',lat:41.9875,lng:-91.6544,rating:3.2,phone:'(319) 365-3400',hours:'Mon–Fri 6:30AM–4PM'},
+  // KS
+  {name:'Quest Diagnostics',addr:'2020 N Woodlawn Ste 406, Wichita, KS 67208',state:'KS',lat:37.7028,lng:-97.2694,rating:3.3,phone:'(316) 685-2500',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'11900 College Blvd Ste 100, Overland Park, KS 66210',state:'KS',lat:38.9270,lng:-94.7203,rating:3.4,phone:'(913) 338-9999',hours:'Mon–Fri 7AM–4PM'},
+  // KY
+  {name:'Quest Diagnostics',addr:'9400 Bunsen Pkwy Ste 203, Louisville, KY 40220',state:'KY',lat:38.2186,lng:-85.6044,rating:3.4,phone:'(502) 499-8800',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'2416 Sir Barton Way Ste 120, Lexington, KY 40509',state:'KY',lat:37.9809,lng:-84.4531,rating:3.5,phone:'(859) 264-9999',hours:'Mon–Fri 6:30AM–4PM'},
+  // LA
+  {name:'Quest Diagnostics',addr:'3600 Prytania St, New Orleans, LA 70115',state:'LA',lat:29.9241,lng:-90.0901,rating:3.4,phone:'(504) 897-9334',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'9660 Airline Hwy Ste D, Baton Rouge, LA 70815',state:'LA',lat:30.4588,lng:-91.1154,rating:3.3,phone:'(225) 927-5522',hours:'Mon–Fri 6:30AM–4PM'},
+  // ME
+  {name:'Quest Diagnostics',addr:'331 Veranda St, Portland, ME 04103',state:'ME',lat:43.6844,lng:-70.2853,rating:3.4,phone:'(207) 878-8308',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'417 State St Ste 101, Bangor, ME 04401',state:'ME',lat:44.7988,lng:-68.7733,rating:3.3,phone:'(207) 947-3553',hours:'Mon–Fri 6:30AM–3:30PM'},
+  // MD
+  {name:'Quest Diagnostics',addr:'700 W Pratt St Ste 100, Baltimore, MD 21201',state:'MD',lat:39.2858,lng:-76.6288,rating:3.5,phone:'(410) 837-0900',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'5530 Wisconsin Ave Ste 1500, Chevy Chase, MD 20815',state:'MD',lat:38.9819,lng:-77.0818,rating:3.6,phone:'(301) 654-7988',hours:'Mon–Fri 7AM–4PM'},
+  // MA
+  {name:'Quest Diagnostics',addr:'330 Brookline Ave, Boston, MA 02215',state:'MA',lat:42.3379,lng:-71.1072,rating:3.6,phone:'(617) 667-4500',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'2 Eaton Pl Ste 107, Worcester, MA 01608',state:'MA',lat:42.2626,lng:-71.8023,rating:3.3,phone:'(508) 753-5550',hours:'Mon–Fri 7AM–3:30PM'},
+  // MI
+  {name:'Quest Diagnostics',addr:'30700 Telegraph Rd Ste 1400, Bingham Farms, MI 48025',state:'MI',lat:42.5269,lng:-83.2696,rating:3.4,phone:'(248) 642-3939',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'4070 Lake Dr SE Ste 215, Grand Rapids, MI 49546',state:'MI',lat:42.9299,lng:-85.5576,rating:3.5,phone:'(616) 956-1800',hours:'Mon–Fri 6:30AM–4PM'},
+  // MN
+  {name:'Quest Diagnostics',addr:'3101 Irving Ave S, Minneapolis, MN 55408',state:'MN',lat:44.9382,lng:-93.3006,rating:3.5,phone:'(612) 827-5757',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'4202 18th Ave NW Ste 100, Rochester, MN 55901',state:'MN',lat:44.0560,lng:-92.5023,rating:3.5,phone:'(507) 285-6800',hours:'Mon–Fri 6:30AM–4PM'},
+  // MS
+  {name:'Quest Diagnostics',addr:'5960 Ridgewood Rd Ste B, Jackson, MS 39211',state:'MS',lat:32.3818,lng:-90.0989,rating:3.3,phone:'(601) 957-0940',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'2500 14th St Ste 100, Gulfport, MS 39501',state:'MS',lat:30.3869,lng:-89.0788,rating:3.2,phone:'(228) 864-2225',hours:'Mon–Fri 6:30AM–3:30PM'},
+  // MO
+  {name:'Quest Diagnostics',addr:'4525 Lindell Blvd Ste 200, St. Louis, MO 63108',state:'MO',lat:38.6358,lng:-90.2766,rating:3.4,phone:'(314) 367-7660',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'4601 Wornall Rd Ste 101, Kansas City, MO 64112',state:'MO',lat:39.0340,lng:-94.5929,rating:3.3,phone:'(816) 531-2920',hours:'Mon–Fri 6:30AM–4PM'},
+  // MT
+  {name:'Quest Diagnostics',addr:'1234 N 30th St Ste 100, Billings, MT 59101',state:'MT',lat:45.7866,lng:-108.5106,rating:3.3,phone:'(406) 245-0055',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'3050 Great Northern Ave Ste 200, Missoula, MT 59801',state:'MT',lat:46.8701,lng:-114.0086,rating:3.2,phone:'(406) 543-4700',hours:'Mon–Fri 6:30AM–3:30PM'},
+  // NE
+  {name:'Quest Diagnostics',addr:'11825 Pacific St Ste 107, Omaha, NE 68154',state:'NE',lat:41.2620,lng:-96.1239,rating:3.4,phone:'(402) 493-4567',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'1301 O St Ste 101, Lincoln, NE 68508',state:'NE',lat:40.8099,lng:-96.6825,rating:3.3,phone:'(402) 474-4444',hours:'Mon–Fri 6:30AM–4PM'},
+  // NV
+  {name:'Quest Diagnostics',addr:'3121 S Maryland Pkwy Ste 500, Las Vegas, NV 89109',state:'NV',lat:36.1311,lng:-115.1388,rating:3.3,phone:'(702) 734-9200',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'6630 S McCarran Blvd Ste B4, Reno, NV 89509',state:'NV',lat:39.4904,lng:-119.8006,rating:3.4,phone:'(775) 827-9555',hours:'Mon–Fri 6:30AM–4PM'},
+  // NH
+  {name:'Quest Diagnostics',addr:'2300 Brown Ave, Manchester, NH 03103',state:'NH',lat:42.9894,lng:-71.4311,rating:3.4,phone:'(603) 623-2400',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'3 Pine St Ext, Nashua, NH 03060',state:'NH',lat:42.7658,lng:-71.4628,rating:3.3,phone:'(603) 880-3100',hours:'Mon–Fri 6:30AM–4PM'},
+  // NJ
+  {name:'Quest Diagnostics',addr:'4914 JFK Blvd Ste 206, West New York, NJ 07093',state:'NJ',lat:40.7833,lng:-74.0224,rating:3.4,phone:'(201) 974-1725',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'852 NJ-3 #208, Clifton, NJ 07012',state:'NJ',lat:40.8389,lng:-74.1548,rating:4.1,phone:'(201) 397-3918',hours:'Mon–Fri 7AM–3:30PM'},
+  {name:'Quest Diagnostics',addr:'6981 N Park Dr Ste 203, Pennsauken, NJ 08109',state:'NJ',lat:39.9274,lng:-75.0798,rating:3.6,phone:'(856) 486-7835',hours:'Mon–Fri 7AM–3:30PM'},
+  // NM
+  {name:'Quest Diagnostics',addr:'6100 Seagull St NE Ste 150, Albuquerque, NM 87109',state:'NM',lat:35.1463,lng:-106.5342,rating:3.3,phone:'(505) 821-5600',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'4332 Rodeo Rd, Santa Fe, NM 87507',state:'NM',lat:35.6470,lng:-105.9875,rating:3.4,phone:'(505) 424-0000',hours:'Mon–Fri 6:30AM–3:30PM'},
+  // NY
+  {name:'Quest Diagnostics',addr:'314 W 14th St 3rd Fl, New York, NY 10014',state:'NY',lat:40.7399,lng:-74.0035,rating:3.6,phone:'(917) 748-6887',hours:'Mon–Fri 8AM–5PM'},
+  {name:'Quest Diagnostics',addr:'65 E 76th St, New York, NY 10021',state:'NY',lat:40.7741,lng:-73.9624,rating:4.3,phone:'(212) 794-6400',hours:'Mon–Fri 8AM–4PM'},
+  {name:'Quest Diagnostics',addr:'2460 Elmwood Ave Ste 400, Buffalo, NY 14217',state:'NY',lat:42.9742,lng:-78.8630,rating:3.4,phone:'(716) 876-5511',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'600 Old Country Rd Ste 300, Garden City, NY 11530',state:'NY',lat:40.7282,lng:-73.6285,rating:3.4,phone:'(516) 222-0444',hours:'Mon–Fri 7AM–4PM'},
+  // NC
+  {name:'Quest Diagnostics',addr:'4301 Park Rd Ste 100, Charlotte, NC 28209',state:'NC',lat:35.1788,lng:-80.8625,rating:3.5,phone:'(704) 529-1919',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'4321 Medical Park Dr Ste 101, Durham, NC 27704',state:'NC',lat:36.0254,lng:-78.9077,rating:3.4,phone:'(919) 477-9777',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'3515 W Wendover Ave Ste 100, Greensboro, NC 27407',state:'NC',lat:36.0683,lng:-79.8747,rating:3.4,phone:'(336) 855-7090',hours:'Mon–Fri 6:30AM–4PM'},
+  // ND
+  {name:'Quest Diagnostics',addr:'4141 28th Ave S Ste 110, Fargo, ND 58104',state:'ND',lat:46.8289,lng:-96.8516,rating:3.3,phone:'(701) 237-4500',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'1021 E Interstate Ave Ste 200, Bismarck, ND 58503',state:'ND',lat:46.8083,lng:-100.7576,rating:3.2,phone:'(701) 258-5500',hours:'Mon–Fri 6:30AM–3:30PM'},
+  // OH
+  {name:'Quest Diagnostics',addr:'3900 E Broad St, Columbus, OH 43213',state:'OH',lat:39.9604,lng:-82.9094,rating:3.5,phone:'(614) 235-7911',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'23611 Chagrin Blvd, Beachwood, OH 44122',state:'OH',lat:41.4788,lng:-81.4900,rating:3.4,phone:'(216) 464-9400',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'3100 Governors Pl, Dayton, OH 45409',state:'OH',lat:39.7356,lng:-84.1988,rating:3.3,phone:'(937) 298-9229',hours:'Mon–Fri 6:30AM–3:30PM'},
+  // OK
+  {name:'Quest Diagnostics',addr:'5720 N Western Ave Ste 102, Oklahoma City, OK 73118',state:'OK',lat:35.5095,lng:-97.5570,rating:3.4,phone:'(405) 848-9100',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'10022 S Mingo Rd Ste 100, Tulsa, OK 74133',state:'OK',lat:36.0239,lng:-95.8573,rating:3.3,phone:'(918) 294-0555',hours:'Mon–Fri 6:30AM–4PM'},
+  // OR
+  {name:'Quest Diagnostics',addr:'4800 Meadows Rd Ste 175, Lake Oswego, OR 97035',state:'OR',lat:45.4260,lng:-122.7037,rating:3.5,phone:'(503) 620-9999',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'2869 NE Conners Ave, Bend, OR 97701',state:'OR',lat:44.0795,lng:-121.2951,rating:3.4,phone:'(541) 383-6161',hours:'Mon–Fri 6:30AM–3:30PM'},
+  // PA
+  {name:'Quest Diagnostics',addr:'969 Greentree Rd 2nd Fl, Pittsburgh, PA 15220',state:'PA',lat:40.4204,lng:-80.0450,rating:3.2,phone:'(412) 922-0215',hours:'Mon–Fri 6:30AM–5:30PM'},
+  {name:'Quest Diagnostics',addr:'586 Middletown Blvd Ste C-11, Langhorne, PA 19047',state:'PA',lat:40.1876,lng:-74.8773,rating:3.9,phone:'(215) 750-9481',hours:'Mon–Fri 6:30AM–3:30PM'},
+  {name:'Quest Diagnostics',addr:'400 W Allegheny Ave, Philadelphia, PA 19133',state:'PA',lat:39.9984,lng:-75.1360,rating:3.6,phone:'(215) 426-2626',hours:'Mon–Fri 7AM–3:30PM'},
+  // PR
+  {name:'Quest Diagnostics',addr:'1060 Ave Ashford Ste 101, San Juan, PR 00907',state:'PR',lat:18.4620,lng:-66.0832,rating:3.4,phone:'(787) 724-2424',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'2225 Blvd Luis A Ferré, Ponce, PR 00717',state:'PR',lat:18.0110,lng:-66.6140,rating:3.3,phone:'(787) 841-4141',hours:'Mon–Fri 6:30AM–3:30PM'},
+  // RI
+  {name:'Quest Diagnostics',addr:'55 Claverick St, Providence, RI 02908',state:'RI',lat:41.8219,lng:-71.4306,rating:3.4,phone:'(401) 831-1234',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'1150 Pontiac Ave Ste 104, Cranston, RI 02920',state:'RI',lat:41.7631,lng:-71.4500,rating:3.3,phone:'(401) 943-3000',hours:'Mon–Fri 6:30AM–4PM'},
+  // SC
+  {name:'Quest Diagnostics',addr:'2711 Middleburg Dr Ste 205, Columbia, SC 29204',state:'SC',lat:34.0219,lng:-80.9951,rating:3.4,phone:'(803) 254-2323',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'1541 Ashley River Rd, Charleston, SC 29407',state:'SC',lat:32.7725,lng:-79.9945,rating:3.5,phone:'(843) 766-9009',hours:'Mon–Fri 6:30AM–4PM'},
+  // SD
+  {name:'Quest Diagnostics',addr:'1600 W 22nd St Ste 300, Sioux Falls, SD 57105',state:'SD',lat:43.5231,lng:-96.7430,rating:3.3,phone:'(605) 330-6100',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'2820 Mt Rushmore Rd Ste 100, Rapid City, SD 57701',state:'SD',lat:44.0705,lng:-103.2310,rating:3.2,phone:'(605) 343-0500',hours:'Mon–Fri 6:30AM–3:30PM'},
+  // TN
+  {name:'Quest Diagnostics',addr:'222 22nd Ave N, Nashville, TN 37203',state:'TN',lat:36.1572,lng:-86.8137,rating:3.4,phone:'(615) 329-7272',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'7660 Wolf River Blvd Ste 100, Germantown, TN 38138',state:'TN',lat:35.0898,lng:-89.7891,rating:3.5,phone:'(901) 753-8880',hours:'Mon–Fri 6:30AM–4PM'},
+  // TX
+  {name:'Quest Diagnostics',addr:'9999 Westheimer Rd Ste 106, Houston, TX 77042',state:'TX',lat:29.7400,lng:-95.5524,rating:3.4,phone:'(713) 789-0777',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'4230 Lemmon Ave Ste 102, Dallas, TX 75219',state:'TX',lat:32.8283,lng:-96.8063,rating:3.2,phone:'(214) 520-1515',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'8038 Wurzbach Rd Ste 110, San Antonio, TX 78229',state:'TX',lat:29.5091,lng:-98.5727,rating:3.5,phone:'(210) 616-0999',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'6500 Burnet Rd Ste 110, Austin, TX 78757',state:'TX',lat:30.3622,lng:-97.7393,rating:3.3,phone:'(512) 467-8841',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'1300 Murchison Dr Ste A, El Paso, TX 79902',state:'TX',lat:31.7760,lng:-106.4848,rating:3.4,phone:'(915) 533-8881',hours:'Mon–Fri 6:30AM–4PM'},
+  // UT
+  {name:'Quest Diagnostics',addr:'3760 Highland Dr Ste 300, Salt Lake City, UT 84106',state:'UT',lat:40.6959,lng:-111.8586,rating:3.5,phone:'(801) 484-9000',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'4403 Harrison Blvd Ste 4200, Ogden, UT 84403',state:'UT',lat:41.2253,lng:-111.9665,rating:3.3,phone:'(801) 476-4700',hours:'Mon–Fri 6:30AM–4PM'},
+  // VT
+  {name:'Quest Diagnostics',addr:'335 Dorset St Ste 5000, South Burlington, VT 05403',state:'VT',lat:44.4559,lng:-73.1592,rating:3.4,phone:'(802) 863-1701',hours:'Mon–Fri 7AM–4PM'},
+  // VA
+  {name:'Quest Diagnostics',addr:'6800 W Broad St Ste 100, Richmond, VA 23230',state:'VA',lat:37.5949,lng:-77.5101,rating:3.5,phone:'(804) 282-9000',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'4801 Langston Blvd, Arlington, VA 22207',state:'VA',lat:38.8916,lng:-77.1177,rating:3.4,phone:'(703) 534-3333',hours:'Mon–Fri 7AM–4PM'},
+  // WA
+  {name:'Quest Diagnostics',addr:'1101 Madison St Ste 200, Seattle, WA 98104',state:'WA',lat:47.6098,lng:-122.3204,rating:3.5,phone:'(206) 223-9900',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'1901 S Cedar St Ste 305, Tacoma, WA 98405',state:'WA',lat:47.2371,lng:-122.4568,rating:3.3,phone:'(253) 756-5775',hours:'Mon–Fri 6:30AM–4PM'},
+  // WV
+  {name:'Quest Diagnostics',addr:'1027 Oakwood Rd Ste 300, Charleston, WV 25314',state:'WV',lat:38.3127,lng:-81.7005,rating:3.3,phone:'(304) 744-2600',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'1085 Van Voorhis Rd Ste 100, Morgantown, WV 26505',state:'WV',lat:39.6340,lng:-79.9739,rating:3.4,phone:'(304) 598-9100',hours:'Mon–Fri 6:30AM–4PM'},
+  // WI
+  {name:'Quest Diagnostics',addr:'11520 N Port Washington Rd, Mequon, WI 53092',state:'WI',lat:43.2291,lng:-87.9032,rating:3.5,phone:'(262) 241-7220',hours:'Mon–Fri 7AM–4PM'},
+  {name:'Quest Diagnostics',addr:'2880 University Ave, Madison, WI 53705',state:'WI',lat:43.0726,lng:-89.4322,rating:3.4,phone:'(608) 231-4455',hours:'Mon–Fri 6:30AM–4PM'},
+  // WY
+  {name:'Quest Diagnostics',addr:'5620 Dell Range Blvd Ste 120, Cheyenne, WY 82009',state:'WY',lat:41.1764,lng:-104.8266,rating:3.3,phone:'(307) 638-1001',hours:'Mon–Fri 6:30AM–4PM'},
+  {name:'Quest Diagnostics',addr:'4800 W 11th St Ste B, Casper, WY 82604',state:'WY',lat:42.8541,lng:-106.3631,rating:3.2,phone:'(307) 234-9595',hours:'Mon–Fri 6:30AM–3:30PM'},
+];
+
+
+// ── Init Google Maps ──
+function initMap() {
+  map = new google.maps.Map(document.getElementById('map'), {
+    center: { lat: 39.5, lng: -98.35 },
+    zoom: 4,
+    styles: [
+      {featureType:'poi',elementType:'labels',stylers:[{visibility:'off'}]},
+      {featureType:'transit',elementType:'labels',stylers:[{visibility:'off'}]},
+      {featureType:'water',elementType:'geometry.fill',stylers:[{color:'#c8d8ee'}]},
+      {featureType:'landscape',elementType:'geometry.fill',stylers:[{color:'#f0f4f0'}]},
+      {featureType:'road.highway',elementType:'geometry.fill',stylers:[{color:'#ffffff'}]},
+      {featureType:'road.highway',elementType:'geometry.stroke',stylers:[{color:'#d0d5df'}]},
+      {featureType:'road.arterial',elementType:'geometry.fill',stylers:[{color:'#ffffff'}]},
+      {featureType:'administrative.country',elementType:'geometry.stroke',stylers:[{color:'#a0a8b8'}]},
+      {featureType:'administrative.province',elementType:'geometry.stroke',stylers:[{color:'#b0b8c8'},{weight:1}]},
+    ],
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: true,
+    zoomControl: true,
+    zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_CENTER },
+  });
+
+  placesService = new google.maps.places.PlacesService(map);
+  geocoder = new google.maps.Geocoder();
+  infoWindow = new google.maps.InfoWindow({ maxWidth: 320 });
+
+  // Plot all CRL locations on load
+  plotAllStatic();
+
+  // Mark map as ready
+  mapReady = true;
+  document.getElementById('search-input').placeholder = 'Search by city, state, or ZIP code…';
+  document.getElementById('search-input').disabled = false;
+
+  document.getElementById('search-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSearch();
+  });
+}
+
+// ── Plot all static locations on startup ──
+function plotAllCRL() {
+  if (currentFilter === 'labcorp' || currentFilter === 'quest') return;
+  CRL_LOCS.forEach(loc => addCRLMarker(loc, false));
+}
+
+function plotAllStatic() {
+  LABCORP_LOCS.forEach(loc => addStaticMarker(loc, 'labcorp'));
+  QUEST_LOCS.forEach(loc => addStaticMarker(loc, 'quest'));
+  CRL_LOCS.forEach(loc => addCRLMarker(loc, false));
+}
+
+function addStaticMarker(loc, type) {
+  const color = type === 'labcorp' ? '#d63031' : '#0984e3';
+  const svgMarker = {
+    path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
+    fillColor: color,
+    fillOpacity: 0.9,
+    strokeColor: '#ffffff',
+    strokeWeight: 1.5,
+    scale: 1.4,
+    anchor: new google.maps.Point(12, 22),
+  };
+  const marker = new google.maps.Marker({
+    position: { lat: loc.lat, lng: loc.lng },
+    map: (currentFilter === 'all' || currentFilter === type) ? map : null,
+    icon: svgMarker,
+    title: loc.name,
+  });
+  marker.addListener('click', () => {
+    openStaticInfoWindow(marker, loc, type);
+  });
+  crlMarkersShown.push({ marker, loc: { ...loc, _type: type }, type });
+}
+
+function openStaticInfoWindow(marker, loc, type) {
+  const typeName = type === 'labcorp' ? 'LabCorp' : 'Quest Diagnostics';
+  const badge = type === 'labcorp' ? 'LC' : 'QD';
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc.name + ' ' + loc.addr)}`;
+  const bookUrl = type === 'labcorp'
+    ? 'https://www.labcorp.com/labs-and-appointments/find-a-patient-service-center'
+    : 'https://www.questdiagnostics.com/patient/find-a-lab';
+  const content = `<div class="iw">
+    <div class="iw-header">
+      <div class="iw-badge ${type}">${badge}</div>
+      <div>
+        <div class="iw-name">${loc.name}</div>
+        <div class="iw-type">${typeName} · ${loc.state}</div>
+      </div>
+    </div>
+    <div class="iw-rows">
+      <div class="iw-row"><span class="iw-row-icon">🏢</span><span class="iw-row-val">${loc.addr}</span></div>
+      ${loc.phone ? `<div class="iw-row"><span class="iw-row-icon">📞</span><span class="iw-row-val"><a href="tel:${loc.phone}">${loc.phone}</a></span></div>` : ''}
+      ${loc.hours ? `<div class="iw-row"><span class="iw-row-icon">🕐</span><span class="iw-row-val">${loc.hours}</span></div>` : ''}
+      ${loc.rating ? `<div class="iw-row"><span class="iw-row-icon">⭐</span><span class="iw-row-val">${loc.rating.toFixed(1)} / 5.0</span></div>` : ''}
+    </div>
+    <div class="iw-actions">
+      <a href="${mapsUrl}" target="_blank" class="iw-btn iw-btn-primary">Get Directions</a>
+      <a href="${bookUrl}" target="_blank" class="iw-btn iw-btn-secondary">Book Appt</a>
+    </div>
+  </div>`;
+  infoWindow.setContent(content);
+  infoWindow.open(map, marker);
+}
+
+function addCRLMarker(loc, highlight) {
+  const svgMarker = {
+    path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
+    fillColor: '#6c3fc5',
+    fillOpacity: highlight ? 1 : 0.8,
+    strokeColor: '#ffffff',
+    strokeWeight: 1.5,
+    scale: highlight ? 1.8 : 1.4,
+    anchor: new google.maps.Point(12, 22),
+  };
+  const marker = new google.maps.Marker({
+    position: { lat: loc.lat, lng: loc.lng },
+    map,
+    icon: svgMarker,
+    title: loc.name,
+  });
+  marker.addListener('click', () => {
+    openCRLInfoWindow(marker, loc);
+    highlightCard('crl-' + loc.lat + loc.lng);
+  });
+  crlMarkersShown.push({ marker, loc });
+  return marker;
+}
+
+function openStaticInfoWindow(marker, result) {
+  const loc = result.staticData;
+  const type = result.type;
+  const typeName = type === 'labcorp' ? 'LabCorp' : 'Quest Diagnostics';
+  const badge = type === 'labcorp' ? 'LC' : 'QD';
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc.name + ' ' + loc.addr)}`;
+  const bookUrl = type === 'labcorp'
+    ? 'https://www.labcorp.com/labs-and-appointments/find-a-patient-service-center'
+    : 'https://www.questdiagnostics.com/content/dam/corporate/restricted/documents/pdfs/patient/my-quest/find-a-lab.html';
+  const content = `<div class="iw">
+    <div class="iw-header">
+      <div class="iw-badge ${type}">${badge}</div>
+      <div>
+        <div class="iw-name">${loc.name}</div>
+        <div class="iw-type">${typeName} · ${loc.state}</div>
+      </div>
+    </div>
+    <div class="iw-rows">
+      <div class="iw-row"><span class="iw-row-icon">🏢</span><span class="iw-row-val">${loc.addr}</span></div>
+    </div>
+    <div class="iw-actions">
+      <a href="${mapsUrl}" target="_blank" class="iw-btn iw-btn-primary">Get Directions</a>
+      <a href="${bookUrl}" target="_blank" class="iw-btn iw-btn-secondary">Book Appt</a>
+    </div>
+  </div>`;
+  infoWindow.setContent(content);
+  infoWindow.open(map, marker);
+}
+
+function openCRLInfoWindow(marker, loc) {
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc.name + ' ' + loc.addr)}`;
+  const content = `<div class="iw">
+    <div class="iw-header">
+      <div class="iw-badge crl">CRL</div>
+      <div>
+        <div class="iw-name">${loc.name}</div>
+        <div class="iw-type">CRL Network · ${loc.tag}</div>
+      </div>
+    </div>
+    <div class="iw-rows">
+      <div class="iw-row"><span class="iw-row-icon">🏢</span><span class="iw-row-val">${loc.addr}</span></div>
+      <div class="iw-row"><span class="iw-row-icon">🕐</span><span class="iw-row-val">${loc.hours}</span></div>
+      ${loc.phone !== 'N/A' ? `<div class="iw-row"><span class="iw-row-icon">📞</span><span class="iw-row-val"><a href="tel:${loc.phone}">${loc.phone}</a></span></div>` : ''}
+    </div>
+    <div class="iw-actions">
+      <a href="${mapsUrl}" target="_blank" class="iw-btn iw-btn-primary">Get Directions</a>
+      <a href="https://www.crlsolutions.net/find-a-location" target="_blank" class="iw-btn iw-btn-secondary">CRL Site</a>
+    </div>
+  </div>`;
+  infoWindow.setContent(content);
+  infoWindow.open(map, marker);
+}
+
+function getCRLNearby() {
+  if (!searchCenter) return [];
+  return CRL_LOCS.map(loc => {
+    const pos = new google.maps.LatLng(loc.lat, loc.lng);
+    const dist = google.maps.geometry.spherical.computeDistanceBetween(searchCenter, pos) / 1609.34;
+    return { ...loc, dist };
+  }).filter(l => l.dist <= searchRadius).sort((a, b) => a.dist - b.dist);
+}
+
+function doSearch() {
+  if (!mapReady || !geocoder) {
+    showToast('Map is still loading — please wait a moment');
+    return;
+  }
+  const query = document.getElementById('search-input').value.trim();
+  if (!query) { showToast('Enter a city, state, or ZIP code'); return; }
+
+  showSearching(true);
+  clearMarkers();
+  allResults = [];
+
+  const isZip = /^\d{5}$/.test(query);
+
+  // Strategy 1: component-based geocoding (most reliable for ZIPs)
+  const geocodeRequest = isZip
+    ? { componentRestrictions: { postalCode: query, country: 'US' } }
+    : { address: query + ', USA' };
+
+  console.log('Geocoding with:', geocodeRequest);
+
+  geocoder.geocode(geocodeRequest, (results, status) => {
+    console.log('Geocode status:', status, results?.[0]?.formatted_address);
+
+    if (status === 'OK' && results && results.length > 0) {
+      handleGeoResult(results[0].geometry.location);
+      return;
+    }
+
+    console.log('Strategy 1 failed, trying plain address...');
+
+    // Strategy 2: plain text geocode
+    geocoder.geocode({ address: query }, (r2, s2) => {
+      console.log('Strategy 2:', s2, r2?.[0]?.formatted_address);
+
+      if (s2 === 'OK' && r2 && r2.length > 0) {
+        handleGeoResult(r2[0].geometry.location);
+        return;
+      }
+
+      console.log('Strategy 2 failed, trying Places text search...');
+
+      // Strategy 3: use Places textSearch as geocoder fallback
+      placesService.textSearch({ query: query + ' United States' }, (r3, s3) => {
+        console.log('Strategy 3 (Places):', s3, r3?.[0]?.name, r3?.[0]?.formatted_address);
+
+        if (s3 === google.maps.places.PlacesServiceStatus.OK && r3 && r3.length > 0) {
+          handleGeoResult(r3[0].geometry.location);
+          return;
+        }
+
+        // All strategies failed
+        showSearching(false);
+        if (status === 'REQUEST_DENIED' || s2 === 'REQUEST_DENIED') {
+          showToast('API key error — check Google Cloud Console');
+        } else {
+          showToast('Location not found. Try "New York, NY" or "Miami, FL"');
+        }
+      });
+    });
+  });
+}
+
+function handleGeoResult(loc) {
+  searchCenter = loc;
+  map.setCenter(loc);
+  map.setZoom(11);
+  document.getElementById('search-clear').classList.add('visible');
+  document.getElementById('radius-row').style.display = 'flex';
+  drawRadiusCircle();
+  searchBothNetworks(loc);
+}
+
+function searchBothNetworks(center) {
+  const networks = [];
+  if (currentFilter === 'all' || currentFilter === 'labcorp') networks.push({ keyword: 'LabCorp', type: 'labcorp' });
+  if (currentFilter === 'all' || currentFilter === 'quest')   networks.push({ keyword: 'Quest Diagnostics', type: 'quest' });
+
+  if (networks.length === 0) { finishSearch(); return; }
+
+  let done = 0;
+  networks.forEach(net => {
+    searchNetwork(center, net.keyword, net.type, () => {
+      done++;
+      if (done === networks.length) finishSearch();
+    });
+  });
+}
+
+function searchNetwork(center, keyword, type, callback) {
+  const radiusMeters = Math.min(searchRadius * 1609.34, 50000);
+
+  const request = {
+    query: keyword,
+    location: center,
+    radius: radiusMeters,
+  };
+
+  placesService.textSearch(request, (results, status) => {
+    console.log('textSearch', keyword, '->', status, results ? results.length + ' results' : 'none');
+
+    if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+      results.forEach(place => {
+        if (isRelevant(place.name, keyword)) addResult(place, type);
+      });
+    } else if (status === 'REQUEST_DENIED') {
+      showToast('Places API denied — enable it in Google Cloud Console');
+    }
+
+    // Always fall back to nearbySearch as a second pass
+    const req2 = {
+      location: center,
+      radius: radiusMeters,
+      keyword: keyword,
+    };
+    placesService.nearbySearch(req2, (results2, status2) => {
+      console.log('nearbySearch', keyword, '->', status2, results2 ? results2.length + ' results' : 'none');
+      if (status2 === google.maps.places.PlacesServiceStatus.OK && results2) {
+        results2.forEach(place => {
+          if (isRelevant(place.name, keyword)) addResult(place, type);
+        });
+      }
+      callback();
+    });
+  });
+}
+
+function isRelevant(name, keyword) {
+  const n = (name || '').toLowerCase();
+  if (keyword === 'LabCorp') return n.includes('labcorp') || n.includes('lab corp');
+  if (keyword === 'Quest Diagnostics') return n.includes('quest');
+  return false;
+}
+
+function addResult(place, type) {
+  if (!place || !place.place_id) return;
+  // Deduplicate
+  if (allResults.find(r => r.place && r.place.place_id === place.place_id)) return;
+
+  const distMiles = searchCenter && place.geometry
+    ? google.maps.geometry.spherical.computeDistanceBetween(searchCenter, place.geometry.location) / 1609.34
+    : null;
+
+  const result = { place, type, dist: distMiles };
+  allResults.push(result);
+
+  const color = type === 'labcorp' ? '#d63031' : '#0984e3';
+  const label = type === 'labcorp' ? 'LC' : 'QD';
+
+  const svgMarker = {
+    path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
+    fillColor: color,
+    fillOpacity: 1,
+    strokeColor: '#ffffff',
+    strokeWeight: 1.5,
+    scale: 1.6,
+    anchor: new google.maps.Point(12, 22),
+  };
+
+  const marker = new google.maps.Marker({
+    position: place.geometry.location,
+    map,
+    icon: svgMarker,
+    title: place.name,
+    animation: google.maps.Animation.DROP,
+  });
+
+  marker.addListener('click', () => {
+    openInfoWindow(marker, result);
+    highlightCard(place.place_id);
+  });
+
+  allMarkers.push(marker);
+}
+
+function finishSearch() {
+  // Add static LabCorp results within radius
+  if (currentFilter === 'all' || currentFilter === 'labcorp') {
+    LABCORP_LOCS.forEach(loc => {
+      const pos = new google.maps.LatLng(loc.lat, loc.lng);
+      const dist = google.maps.geometry.spherical.computeDistanceBetween(searchCenter, pos) / 1609.34;
+      if (dist <= searchRadius && !allResults.find(r => r.staticData && r.staticData.addr === loc.addr)) {
+        allResults.push({ type: 'labcorp', staticData: loc, dist });
+      }
+    });
+  }
+  // Add static Quest results within radius
+  if (currentFilter === 'all' || currentFilter === 'quest') {
+    QUEST_LOCS.forEach(loc => {
+      const pos = new google.maps.LatLng(loc.lat, loc.lng);
+      const dist = google.maps.geometry.spherical.computeDistanceBetween(searchCenter, pos) / 1609.34;
+      if (dist <= searchRadius && !allResults.find(r => r.staticData && r.staticData.addr === loc.addr)) {
+        allResults.push({ type: 'quest', staticData: loc, dist });
+      }
+    });
+  }
+  // Add CRL results within radius
+  if (currentFilter === 'all' || currentFilter === 'crl') {
+    const nearby = getCRLNearby();
+    nearby.forEach(loc => {
+      if (!allResults.find(r => r.crlData && r.crlData.addr === loc.addr)) {
+        allResults.push({ type: 'crl', crlData: loc, dist: loc.dist });
+      }
+    });
+    crlMarkersShown.forEach(({ marker, loc }) => {
+      const pos = new google.maps.LatLng(loc.lat, loc.lng);
+      const dist = google.maps.geometry.spherical.computeDistanceBetween(searchCenter, pos) / 1609.34;
+      marker.setOpacity(dist <= searchRadius ? 1 : 0.2);
+    });
+  }
+  showSearching(false);
+  allResults.sort((a, b) => (a.dist || 999) - (b.dist || 999));
+  renderSidebar();
+  if (allResults.length === 0) {
+    showToast('No labs found nearby — try increasing the radius');
+  } else {
+    showToast(`Found ${allResults.length} location${allResults.length !== 1 ? 's' : ''} nearby`);
+  }
+}
+
+// ── Info Window ──
+function openInfoWindow(marker, result) {
+  const p = result.place;
+  const typeName = result.type === 'labcorp' ? 'LabCorp' : 'Quest Diagnostics';
+  const badge = result.type === 'labcorp' ? 'LC' : 'QD';
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name)}&query_place_id=${p.place_id}`;
+  const bookUrl = result.type === 'labcorp'
+    ? 'https://www.labcorp.com/labs-and-appointments/find-a-patient-service-center'
+    : 'https://www.questdiagnostics.com/content/dam/corporate/restricted/documents/pdfs/patient/my-quest/find-a-lab.html';
+
+  const rating = p.rating ? `<div class="iw-row">
+    <span class="iw-row-icon">⭐</span>
+    <span class="iw-row-val">${p.rating.toFixed(1)} / 5.0</span>
+  </div>` : '';
+
+  const hours = p.opening_hours ? `<div class="iw-row">
+    <span class="iw-row-icon">🕐</span>
+    <span class="iw-row-val" style="color:${p.opening_hours.isOpen() ? '#10b981' : '#ef4444'};font-weight:600">
+      ${p.opening_hours.isOpen() ? 'Open now' : 'Closed'}
+    </span>
+  </div>` : '';
+
+  const dist = result.dist ? `<div class="iw-row">
+    <span class="iw-row-icon">📍</span>
+    <span class="iw-row-val">${result.dist.toFixed(1)} miles away</span>
+  </div>` : '';
+
+  const content = `<div class="iw">
+    <div class="iw-header">
+      <div class="iw-badge ${result.type}">${badge}</div>
+      <div>
+        <div class="iw-name">${p.name}</div>
+        <div class="iw-type">${typeName}</div>
+      </div>
+    </div>
+    <div class="iw-rows">
+      <div class="iw-row">
+        <span class="iw-row-icon">🏢</span>
+        <span class="iw-row-val">${p.vicinity || 'Address unavailable'}</span>
+      </div>
+      ${rating}${hours}${dist}
+    </div>
+    <div class="iw-actions">
+      <a href="${mapsUrl}" target="_blank" class="iw-btn iw-btn-primary">Get Directions</a>
+      <a href="${bookUrl}" target="_blank" class="iw-btn iw-btn-secondary">Book Appt</a>
+    </div>
+  </div>`;
+
+  infoWindow.setContent(content);
+  infoWindow.open(map, marker);
+
+  // Get full details for phone/hours
+  placesService.getDetails({ placeId: p.place_id, fields: ['formatted_phone_number', 'opening_hours', 'website'] }, (details, status) => {
+    if (status === google.maps.places.PlacesServiceStatus.OK && details) {
+      const phone = details.formatted_phone_number ? `<div class="iw-row">
+        <span class="iw-row-icon">📞</span>
+        <span class="iw-row-val"><a href="tel:${details.formatted_phone_number}">${details.formatted_phone_number}</a></span>
+      </div>` : '';
+      const hoursDetail = details.opening_hours?.weekday_text
+        ? `<div class="iw-row" style="margin-top:2px">
+            <span class="iw-row-icon">📅</span>
+            <span class="iw-row-val">${details.opening_hours.weekday_text.join('<br>')}</span>
+           </div>` : '';
+      // Refresh with more info
+      const fullContent = `<div class="iw">
+        <div class="iw-header">
+          <div class="iw-badge ${result.type}">${badge}</div>
+          <div>
+            <div class="iw-name">${p.name}</div>
+            <div class="iw-type">${typeName}</div>
+          </div>
+        </div>
+        <div class="iw-rows">
+          <div class="iw-row">
+            <span class="iw-row-icon">🏢</span>
+            <span class="iw-row-val">${p.vicinity || 'Address unavailable'}</span>
+          </div>
+          ${phone}
+          ${details.opening_hours ? `<div class="iw-row"><span class="iw-row-icon">🕐</span><span class="iw-row-val" style="color:${details.opening_hours.isOpen() ? '#10b981' : '#ef4444'};font-weight:600">${details.opening_hours.isOpen() ? 'Open now' : 'Closed'}</span></div>` : ''}
+          ${hoursDetail}${dist}
+        </div>
+        <div class="iw-actions">
+          <a href="${mapsUrl}" target="_blank" class="iw-btn iw-btn-primary">Get Directions</a>
+          <a href="${bookUrl}" target="_blank" class="iw-btn iw-btn-secondary">Book Appt</a>
+        </div>
+      </div>`;
+      infoWindow.setContent(fullContent);
+    }
+  });
+}
+
+// ── Sidebar ──
+function renderSidebar() {
+  const list = document.getElementById('loc-list');
+  document.getElementById('loc-count').innerHTML = `${allResults.length} <span>found</span>`;
+
+  if (!allResults.length) {
+    list.innerHTML = `<div class="no-results">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <strong>No locations found</strong>
+      Try a larger radius or a different search area.
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = '';
+  allResults.forEach(result => {
+    const card = document.createElement('div');
+
+    if (result.type === 'crl') {
+      const loc = result.crlData;
+      const cardId = 'crl-' + loc.lat + loc.lng;
+      card.className = 'card';
+      card.id = 'card-' + cardId;
+      card.innerHTML = `
+        <div class="card-badge crl">CRL</div>
+        <div class="card-info">
+          <div class="card-name">${loc.name}</div>
+          <div class="card-addr">${loc.addr}</div>
+          <div class="card-meta">
+            <span class="card-tag" style="background:rgba(108,63,197,.08);color:var(--crl)">CRL Network</span>
+            <span class="card-tag">${loc.tag}</span>
+            ${result.dist ? `<span class="card-dist">📍 ${result.dist.toFixed(1)} mi</span>` : ''}
+          </div>
+        </div>`;
+      card.addEventListener('click', () => {
+        const found = crlMarkersShown.find(m => m.loc.lat === loc.lat && m.loc.lng === loc.lng);
+        if (found) {
+          map.panTo(found.marker.getPosition());
+          map.setZoom(14);
+          openCRLInfoWindow(found.marker, loc);
+        }
+        highlightCard(cardId);
+      });
+    } else {
+      const typeName = result.type === 'labcorp' ? 'LabCorp' : 'Quest Diagnostics';
+      const badge = result.type === 'labcorp' ? 'LC' : 'QD';
+      const isStatic = !!result.staticData;
+      const loc = isStatic ? result.staticData : null;
+      const p = result.place || null;
+      const name = isStatic ? loc.name : (p ? p.name : '');
+      const addr = isStatic ? loc.addr : (p ? (p.vicinity || '') : '');
+      const rating = isStatic ? (loc.rating || null) : (p ? (p.rating || null) : null);
+      const cardId = isStatic ? (result.type + loc.lat + loc.lng) : (p ? p.place_id : Math.random());
+      card.className = 'card';
+      card.id = 'card-' + cardId;
+      card.innerHTML = `
+        <div class="card-badge ${result.type}">${badge}</div>
+        <div class="card-info">
+          <div class="card-name">${name}</div>
+          <div class="card-addr">${addr}</div>
+          <div class="card-meta">
+            <span class="card-tag">${typeName}</span>
+            ${rating ? `<span class="card-rating">★ ${rating.toFixed(1)}</span>` : ''}
+            ${result.dist ? `<span class="card-dist">📍 ${result.dist.toFixed(1)} mi</span>` : ''}
+          </div>
+        </div>`;
+      card.addEventListener('click', () => {
+        if (isStatic) {
+          const found = crlMarkersShown.find(m => m.loc && m.loc.lat === loc.lat && m.loc.lng === loc.lng);
+          if (found) { map.panTo(found.marker.getPosition()); map.setZoom(14); openStaticInfoWindow(found.marker, loc, result.type); }
+        } else if (p) {
+          const marker = allMarkers.find(m => m.getTitle() === p.name);
+          if (marker) { map.panTo(marker.getPosition()); map.setZoom(14); openInfoWindow(marker, result); }
+        }
+        highlightCard(cardId);
+      });
+    }
+    list.appendChild(card);
+  });
+}
+
+function highlightCard(placeId) {
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+  const el = document.getElementById('card-' + placeId);
+  if (el) { el.classList.add('active'); el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+}
+
+// ── Filters ──
+function setFilter(f) {
+  currentFilter = f;
+  document.getElementById('btn-all').className = 'filter-btn' + (f === 'all' ? ' active-all' : '');
+  document.getElementById('btn-lc').className = 'filter-btn' + (f === 'labcorp' ? ' active-lc' : '');
+  document.getElementById('btn-qd').className = 'filter-btn' + (f === 'quest' ? ' active-qd' : '');
+  document.getElementById('btn-crl').className = 'filter-btn' + (f === 'crl' ? ' active-crl' : '');
+
+  // Show/hide all static markers based on filter
+  crlMarkersShown.forEach(({ marker, loc, type }) => {
+    const markerType = type || (loc._type) || 'crl';
+    const show = f === 'all' || f === markerType;
+    marker.setMap(show ? map : null);
+    marker.setOpacity(0.9);
+  });
+  clearMarkers();
+  allResults = [];
+
+  if (searchCenter) {
+    showSearching(true);
+    searchBothNetworks(searchCenter);
+  }
+}
+
+function setRadius(r) {
+  searchRadius = r;
+  document.querySelectorAll('.radius-chip').forEach(c => c.classList.toggle('active', parseInt(c.dataset.r) === r));
+  if (searchCenter) {
+    drawRadiusCircle();
+    clearMarkers();
+    allResults = [];
+    showSearching(true);
+    searchBothNetworks(searchCenter);
+  }
+}
+
+// ── Helpers ──
+function clearMarkers() {
+  allMarkers.forEach(m => m.setMap(null));
+  allMarkers = [];
+  if (infoWindow) infoWindow.close();
+  // Reset CRL opacity
+  crlMarkersShown.forEach(({ marker }) => marker.setOpacity(0.8));
+}
+
+function clearSearch() {
+  clearMarkers();
+  allResults = [];
+  searchCenter = null;
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-clear').classList.remove('visible');
+  document.getElementById('radius-row').style.display = 'none';
+  document.getElementById('loc-list').innerHTML = `<div class="no-results">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <strong>Search to find labs near you</strong>
+    Enter any city, state, or ZIP — all 50 states + Puerto Rico supported.<br><br>
+    <span style="font-size:.72rem;line-height:1.6">
+      🔴 <b>LabCorp</b> &amp; 🔵 <b>Quest</b> load live from Google for any location.<br>
+      🟣 <b>CRL Network</b> pins are pre-loaded where available.
+    </span>
+  </div>`;
+  document.getElementById('loc-count').innerHTML = '0 <span>found</span>';
+  if (radiusCircle) { radiusCircle.setMap(null); radiusCircle = null; }
+  // Restore all static markers at full opacity
+  crlMarkersShown.forEach(({ marker, type, loc }) => {
+    const markerType = type || (loc._type) || 'crl';
+    const show = currentFilter === 'all' || currentFilter === markerType;
+    marker.setMap(show ? map : null);
+    marker.setOpacity(0.9);
+  });
+  map.setCenter({ lat: 39.5, lng: -98.35 });
+  map.setZoom(4);
+}
+
+function drawRadiusCircle() {
+  if (radiusCircle) radiusCircle.setMap(null);
+  radiusCircle = new google.maps.Circle({
+    map,
+    center: searchCenter,
+    radius: searchRadius * 1609.34,
+    fillColor: '#2d3a8c',
+    fillOpacity: 0.04,
+    strokeColor: '#2d3a8c',
+    strokeOpacity: 0.25,
+    strokeWeight: 1.5,
+  });
+}
+
+function showSearching(v) {
+  const el = document.getElementById('searching');
+  if (el) el.classList.toggle('visible', v);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+window.initMap = initMap;
+
+// Called if API key is invalid or billing not enabled
+window.gm_authFailure = function() {
+  showError(
+    '🔑 API Key Error',
+    'Your Google Maps API key was rejected. This usually means:<br><br>' +
+    '<b>1.</b> Billing is not enabled on your Google Cloud project.<br>' +
+    '<b>2.</b> The Maps JavaScript API is not enabled.<br>' +
+    '<b>3.</b> The key has domain restrictions blocking this page.<br><br>' +
+    'Fix: Go to <a href="https://console.cloud.google.com" target="_blank" style="color:#2d3a8c">console.cloud.google.com</a> → ' +
+    'Billing → Enable billing, then APIs & Services → Enable Maps JavaScript API + Places API + Geocoding API.'
+  );
+};
+
+// Called if the script itself fails to load (network error, wrong key format, etc.)
+window.gm_loadError = function() {
+  showError('🌐 Load Error', 'Could not load Google Maps. Check your internet connection.');
+};
+
+function showError(title, html) {
+  document.getElementById('map').innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:center;height:100%;padding:40px">' +
+    '<div style="max-width:460px;background:#fff;border-radius:16px;padding:32px;box-shadow:0 8px 32px rgba(0,0,0,.12);font-family:DM Sans,sans-serif;text-align:center">' +
+    '<div style="font-size:2rem;margin-bottom:12px">' + title.split(' ')[0] + '</div>' +
+    '<div style="font-size:1rem;font-weight:700;color:#1a1d23;margin-bottom:12px">' + title.split(' ').slice(1).join(' ') + '</div>' +
+    '<div style="font-size:.85rem;color:#6b7280;line-height:1.7;text-align:left">' + html + '</div>' +
+    '</div></div>';
+  document.getElementById('search-input').placeholder = 'Map failed to load';
+  document.getElementById('search-input').disabled = true;
+}
+
+// Timeout — if initMap never fires after 10 seconds, show helpful message
+setTimeout(function() {
+  if (!mapReady) {
+    showError(
+      '⏱ Map Timeout',
+      'Google Maps did not load within 10 seconds. Possible causes:<br><br>' +
+      '<b>1.</b> Billing not enabled on Google Cloud (most common).<br>' +
+      '<b>2.</b> APIs not enabled — need Maps JavaScript API, Places API, Geocoding API.<br>' +
+      '<b>3.</b> API key restrictions blocking this domain.<br><br>' +
+      'Go to <a href="https://console.cloud.google.com/apis/dashboard" target="_blank" style="color:#2d3a8c">Google Cloud Console → APIs & Services</a> and verify all 3 APIs are enabled with billing active.'
+    );
+  }
+}, 10000);
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDy9OQD7l1CQW0f0zUoG9THYSK-7MDv-FI&libraries=places,geometry&callback=initMap" async></script>
+</body>
+</html>
